@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('detalle_kardexes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kardex_id');
+            //$table->date('fecha_produccion')->nullable();
             $table->string('tipo_movimiento',20);
             $table->string('empresa',50);
-            $table->string('codigo_conocimiento',50);
+            $table->string('codigo_conocimiento',50)->nullable();
             $table->foreignId('ingreso_id')->nullable();
             $table->foreignId('salida_id')->nullable();
             $table->integer('ingreso')->nullable();;

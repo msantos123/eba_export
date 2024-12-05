@@ -15,8 +15,19 @@ class Carga extends Model
         'descripcion',
         'lote',
         'cantidad',
+        'costo',
         'kilosnetos',
         'librasnetas',
+        'receta_id',
         'solicitud_cargas',
+        'kardex_id',
+        'estado',
     ];
+
+    public function cargas_sigaSalidaDetalle ()
+    {
+        return $this->hasMany(SigaSalidaDetalle::class,'cargaSalida_id','id');
+    }
+
+
 }

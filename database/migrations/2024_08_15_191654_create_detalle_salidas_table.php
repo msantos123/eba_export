@@ -11,6 +11,8 @@ return new class extends Migration
         Schema::create('detalle_salidas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('salida_id');
+            $table->foreignId('kardexs_id');
+            $table->string('codigo_producto');
             $table->string('producto');
             $table->string('lote');
             $table->string('cantidad');

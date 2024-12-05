@@ -10,6 +10,7 @@ class DetalleKardex extends Model
     use HasFactory;
     protected $fillable = [
         'kardex_id',
+        'fecha_produccion',
         'tipo_movimiento',
         'empresa',
         'codigo_conocimiento',

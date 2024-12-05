@@ -1,66 +1,33 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\PreFactura;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class PreFacturaController extends Controller
 {
-    public function index()
+    public function index ()
     {
-        $kardex = Kardex::all();
-        $detalleKardex = DetalleKardex::all();
-        return Inertia::render('PreFactura/Index');
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        $kardex = kardex::all();
-        return Inertia::render('ComprobanteSalida/Create', [
-            'kardex' => $kardex,
+        $pre_factura = PreFactura::select('pre_facturas.id',
+        'pre_facturas.nro_factura','pre_facturas.fecha_factura','pre_facturas.razon_social',
+        'pre_facturas.lugar_destino','pre_facturas.zafra','pre_facturas.anulado')
+        ->orderBy('id', 'desc')->get();
+        return Inertia::render('PreFactura/Index',[
+            'pre_factura' => $pre_factura,
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function show($id)
     {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(ComprobanteSalida $comprobanteSalida)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ComprobanteSalida $comprobanteSalida)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ComprobanteSalida $comprobanteSalida)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ComprobanteSalida $comprobanteSalida)
-    {
-        //
+        $pre_factura = PreFactura::with([
+            'comprobanteSalida.solicitudCarga.cargas'
+        ])
+        ->where('id', $id)
+        ->first();
+        //dd($pre_factura);
+        return Inertia::render('PreFactura/Show',[
+            'pre_factura' => $pre_factura,
+        ]);
     }
 }

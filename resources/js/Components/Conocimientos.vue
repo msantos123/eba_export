@@ -66,8 +66,8 @@ const form = useForm({
             <div>
             <InputLabel for="producto_id" value="Estado"></InputLabel>
             <span v-if="form.estado === 0" class="bg-gray-300 px-2 py-3 rounded-md mt-2 block w-full">Borrador</span>
-            <span v-else-if="form.estado === 1" class="bg-blue-400 px-2 py-3 rounded-md mt-2 block w-full">Enviado</span>
-            <span v-else-if="form.estado === 2" class="bg-green-400 px-2 py-3 rounded-md mt-2 block w-full">Recibido</span>
+            <span v-else-if="form.estado === 1" class="bg-green-400 px-2 py-3 rounded-md mt-2 block w-full">Enviado</span>
+            <span v-else-if="form.estado === 2" class="bg-blue-400 px-2 py-3 rounded-md mt-2 block w-full">Recibido</span>
         </div>
         </div>
 </template>

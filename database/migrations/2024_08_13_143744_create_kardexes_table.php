@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('unidad')->default('Cajas de 20 Kg.');
             $table->string('lote');
             $table->integer('saldo');
+            $table->double('costo_caja')->nullable();
+            $table->foreignId('receta_id');
             $table->timestamps();
         });
     }

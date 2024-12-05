@@ -2,12 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import BlueButton from '@/Components/BlueButton.vue';
+import GreenButton from '@/Components/GreenButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import TextDisabled from '@/Components/TextDisabled.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import CargaTable from '@/Components/CargaTable.vue';
-import SolicitudCarga from '@/Components/SolicitudCarga.vue';
+import CargaPlanta from '@/Components/CargaPlanta.vue';
+import SolicitudCarga from '@/Components/SolicitudCarga/SolicitudCarga.vue';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
 const props = defineProps({
     conocimientos : { type: Object },
@@ -25,13 +27,57 @@ const form = useForm({
     licencia:'',
     placa:'',
     celular:'',
+    errors: {},
 });
 
-const submitForm = (status,solicitudcarga) => {
-    form.status = status;
-    form.post(route('conocimientos.store',solicitudcarga), {
-    });
-}
+
+const submitForm = () => {
+    form.errors = {};
+    const data = {
+        planta: props.solicitudcarga.planta_nombre,
+        solicitud_id: props.solicitudcarga.id,
+        empresa: form.empresa,
+        conductor: form.conductor,
+        vehiculo: form.vehiculo,
+        propietario: form.propietario,
+        licencia: form.licencia,
+        placa: form.placa,
+        celular: form.celular,
+    };
+
+    axios.post(route('conocimientos.store'), data)
+        .then(response => {
+            console.log('Respuesta del servidor:', response);
+            if (response.data === 'Guardado exitosamente') {
+                Swal.fire({
+                    title: 'Guardado!',
+                    text: 'Los cambios han sido guardados.',
+                    icon: 'success',
+                    willClose: () => {
+                        window.location.href = route('conocimientos.index');
+                    }
+                });
+            } else {
+                Swal.fire('Info!', 'Respuesta inesperada del servidor.', 'info');
+            }
+        })
+        .catch(error => {
+            if (error.response && error.response.status === 422) {
+                // Manejo de errores de validación
+                const errors = error.response.data.errors;
+                for (const field in errors) {
+                    // Aquí puedes manejar cada error como desees
+                    console.error(`Error en ${field}: ${errors[field].join(', ')}`);
+                    // Mostrar el error en el formulario
+                    form.errors[field] = errors[field]; // Asegúrate de tener un objeto para errores
+                }
+                Swal.fire('Errores!', 'Por favor corrige los errores en el formulario.', 'error');
+            } else {
+                console.error('Error al guardar:', error);
+                Swal.fire('Error!', 'Ocurrió un error al guardar los cambios.', 'error');
+            }
+        });
+};
 </script>
 
 <template>
@@ -43,8 +89,14 @@ const submitForm = (status,solicitudcarga) => {
         <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
             <div class="px-4 py-3 flex">
                 <div class="mx-1">
-                    <BlueButton :disabled="form.processing" @click.prevent="submitForm(1,solicitudcarga)">
-                    <i class="fa-solid fa-save"></i> Guardar</BlueButton>
+                    <Link :href="route('solicitudcargas.index')"
+                    class="inline-block rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-400 text-sm">
+                    <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
+                    </Link>
+                </div>
+                <div class="mx-1">
+                    <GreenButton :disabled="form.processing" @click.prevent="submitForm()">
+                    <i class="fa-solid fa-save"></i> Guardar como Borrador</GreenButton>
                 </div>
             </div>
         </div>
@@ -132,20 +184,12 @@ const submitForm = (status,solicitudcarga) => {
                                     <InputError :message="form.errors.celular" class="mt-2"></InputError>
                                 </div>
                             </div>
-                            <br>
-                            <SolicitudCarga :solicitudcarga="solicitudcarga" />
-                            <br>
-                            <CargaTable :cargas="cargas" :form="form"/>
-                            <br>
-                            <div class="-mx-3 px py-4" >
-                                <div class="mx-3 py-2">
-                                    <Link :href="route('solicitudcargas.index')"
-                                    :class="'px-4 py-2 bg-gray-400 text-white border rounded-md font-semibold text-xs'">
-                                    <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
-                                    </Link>
-                                </div>
-                            </div>
                         </form>
+                        <br>
+                        <SolicitudCarga :solicitudcarga="solicitudcarga" />
+                        <br>
+                        <CargaPlanta :cargas="cargas" :form="form"/>
+                        <br>
                     </div>
                 </div>
             </div>

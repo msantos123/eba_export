@@ -16,5 +16,14 @@ class Kardex extends Model
         'unidad',
         'lote',
         'saldo',
+        'receta_id',
     ];
+
+    public static function productoKardex ($planta_id)//uso
+    {
+        $productoKardex = Kardex::select('kardexes.*')
+        ->where('kardexes.proveedor_id',$planta_id)->get();
+
+        return $productoKardex;
+    }
 }

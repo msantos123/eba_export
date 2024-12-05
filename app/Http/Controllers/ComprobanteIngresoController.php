@@ -9,57 +9,33 @@ use App\Models\Planta;
 use App\Models\Solicitudcarga;
 use App\Models\User;
 use App\Models\Inventarios;
+
+use App\Http\Requests\ComprobanteIngresoRequest;
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ComprobanteIngresoController extends Controller
 {
-    public function index()
+    public function index()//uso
     {
-        $comprobanteIngreso = ComprobanteIngreso::select('comprobante_ingresos.*','plantas.nombre as plantas_nombre',
-        'conocimientos.codigo')
-        ->join('conocimientos','conocimientos.id','=','comprobante_ingresos.conocimiento_id')
-        ->join('solicitudcargas','solicitudcargas.id','=','conocimientos.solicitud_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->with('vercargas')
-        ->get();
-
-        //dd($comprobanteIngreso);
-
+        $comprobanteIngreso = ComprobanteIngreso::indexIngreso();
         return Inertia::render('ComprobanteIngreso/Index', [
             'comprobanteIngreso' => $comprobanteIngreso,
         ]);
     }
 
-    public function store(Request $request)
+    public function createAlmacen($id)//uso
     {
-        $comprobanteIngreso = ComprobanteIngreso::create([
-            'codigo_ingreso' => $request->input('codigo_ingreso'),
-            'fecha_ingreso' => $request->input('fecha_ingreso'),
-            'cefo' => $request->input('cefo'),
-            'observaciones' => $request->input('observaciones'),
-            'conocimiento_id' => $request->input('conocimiento_id'),
-        ]);
-        return redirect('comprobante_ingreso');
-    }
-
-    public function show($id)
-    {
-        //dd($id);
-        $conocimiento = Conocimiento::where('id',$id)->first();
-        $solicitudId = $conocimiento->solicitud_id;
-
-        $cargas = Carga::where('solicitud_cargas', $solicitudId)->get();
-        $solicitud = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.planta_id',
-        'plantas.id as plantas_id','plantas.nombre as plantas_nombre')
-            ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-            ->where('solicitudcargas.id',$solicitudId)->first();
-
         $codigo = ComprobanteIngreso::generarCodigoIngreso($id);
+        $conocimiento = Conocimiento::where('id',$id)->first();
+        $cargas =  Carga::where('solicitud_cargas', $conocimiento->solicitud_id)->get();
+        $solicitud = Solicitudcarga::verSolicitudcarga($conocimiento->solicitud_id);
 
         return Inertia::render('ComprobanteIngreso/Create', [
             'conocimiento' => $conocimiento,
@@ -69,18 +45,33 @@ class ComprobanteIngresoController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(ComprobanteIngreso $comprobanteIngreso)
+    public function store(ComprobanteIngresoRequest $request)//uso
     {
+        try {
+            $conocimiento = Conocimiento::findOrFail($request->conocimiento_id);
+            $conocimiento->estado = 2;
+            $conocimiento->save();
+
+            ComprobanteIngreso::crearIngreso($request);
+
+            // Retornar una respuesta JSON de éxito
+            return response()->json(['message' => 'Ingreso guardado exitosamente'], 200);
+        } catch (\Exception $e) {
+            // Manejo de errores en caso de excepción
+            return response()->json(['message' => 'Ocurrió un error al guardar el ingreso.'], 500);
+        }
+    }
+
+    public function edit($id)//uso
+    {
+        $comprobanteIngreso = ComprobanteIngreso::where('id',$id)->first();
         $conocimientoId = $comprobanteIngreso->conocimiento_id;
         $conocimiento = Conocimiento::where('id',$conocimientoId)->first();
         $solicitudId = $conocimiento->solicitud_id;
         $cargas = Carga::where('solicitud_cargas', $solicitudId)->get();
         $solicitud = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.planta_id',
-        'plantas.id as plantas_id','plantas.nombre as plantas_nombre')
-            ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
+        'plantas.planta_id as plantas_id','plantas.nombre as plantas_nombre')
+            ->join('plantas','plantas.planta_id','=','solicitudcargas.planta_id')
             ->where('solicitudcargas.id',$solicitudId)->first();
 
         return Inertia::render('ComprobanteIngreso/Edit', [
@@ -91,74 +82,49 @@ class ComprobanteIngresoController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, ComprobanteIngreso $comprobanteIngreso)
+    public function pdf($id)//uso
     {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(ComprobanteIngreso $comprobanteIngreso)
-    {
-        //
-    }
-
-    public function pdf($id)
-    {
-        $comprobanteIngreso = ComprobanteIngreso::select('comprobante_ingresos.id','fecha_ingreso','codigo_ingreso',
-        'cefo','observaciones','conocimientos.codigo',
-        'conocimientos.usuario_id as usuario_planta','conocimientos.empresa','conocimientos.conductor',
-        'conocimientos.vehiculo','conocimientos.propietario','conocimientos.licencia','conocimientos.placa',
-        'conocimientos.celular','conocimientos.estado',
-        'plantas.nombre as planta','users.paterno as paterno','users.materno as materno',
-        'users.name as nombre','conocimientos.solicitud_id',
-        DB::raw('SUM(cargas.cantidad) as total_cantidad'),
-        DB::raw('SUM(cargas.kilosnetos) as total_kilosnetos'),
-        DB::raw('SUM(cargas.librasnetas) as total_librasnetas'))
-        ->join('conocimientos','conocimientos.id','=','comprobante_ingresos.conocimiento_id')
-        ->join('solicitudcargas','solicitudcargas.id','=','conocimientos.solicitud_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->join('cargas', 'cargas.solicitud_cargas', '=', 'solicitudcargas.id')
-        ->join('users', 'users.id','=','conocimientos.usuario_id')
-        ->groupBy('comprobante_ingresos.id','comprobante_ingresos.fecha_ingreso','comprobante_ingresos.codigo_ingreso',
-                'comprobante_ingresos.cefo','comprobante_ingresos.observaciones','conocimientos.codigo','conocimientos.usuario_id',
-                'conocimientos.empresa','conocimientos.conductor','conocimientos.vehiculo','conocimientos.propietario',
-                'conocimientos.licencia','conocimientos.placa','conocimientos.celular', 'conocimientos.estado', 'plantas.nombre',
-                'users.paterno','users.materno', 'users.name', 'conocimientos.solicitud_id')
-        ->where('comprobante_ingresos.id', $id)->first();
-
-        $almacen = User::where('planta_id',2)->first();
+        $comprobanteIngreso = ComprobanteIngreso::pdfIngreso($id);
         $cargas =  Carga::where('solicitud_cargas', $comprobanteIngreso->solicitud_id)->get();
 
         $pdf = app('dompdf.wrapper');
         $pdf->setPaper('letter');
-        $pdf = $pdf->loadView('comprobante-ingreso', compact('comprobanteIngreso','cargas','almacen'));
+        $pdf = $pdf->loadView('comprobante-ingreso', compact('comprobanteIngreso','cargas'));
         return $pdf->stream('ComprobanteIngreso.pdf');
     }
 
-    public function IngresarAlmacen($id)
+
+
+    public function upload(Request $request)//uso
     {
-        $codigo = ComprobanteIngreso::generarCodigoIngreso($id);
-        $conocimiento = Conocimiento::findOrFail($id);
-        $conocimiento->estado = 2;
-        $conocimiento->save();
-
-        $conocimiento = Conocimiento::where('id',$id)->first();
-        $cargas =  Carga::where('solicitud_cargas', $conocimiento->solicitud_id)->get();
-        $solicitud = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.planta_id',
-        'plantas.id as plantas_id','plantas.nombre as plantas_nombre')
-            ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-            ->where('solicitudcargas.id',$conocimiento->solicitud_id)->first();
-
-        return Inertia::render('ComprobanteIngreso/Create', [
-            'conocimiento' => $conocimiento,
-            'cargas' => $cargas,
-            'codigo' => $codigo,
-            'solicitud' => $solicitud,
+        $request->validate([
+            'file' => 'required|mimes:pdf|max:2048',
+            'comprobante_id' => 'required|integer',
         ]);
+
+        try {
+            $file = $request->file('file');
+            $comprobanteId = $request->input('comprobante_id');
+
+            // Crear un nombre único para el archivo usando el ID de conocimiento
+            $uniqueFileName = "comprobante_ingreso_{$comprobanteId}_" . Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+            // Guardar el archivo en el storage
+            $path = $file->storeAs('public/comprobante_ingreso', $uniqueFileName);
+
+            // Guardar el nombre del archivo en la base de datos
+            $comprobanteIngreso = ComprobanteIngreso::find($comprobanteId);
+            $comprobanteIngreso->pdf_comprobante_ingreso = $uniqueFileName;
+            $comprobanteIngreso->save();
+
+            // Retornar la respuesta con la ruta y el nombre del archivo
+            return response()->json([
+                'path' => $uniqueFileName,
+                'file_name' => $uniqueFileName
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar cualquier excepción y retornar un error
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

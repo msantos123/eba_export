@@ -2,171 +2,224 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import TextDisabled from '@/Components/TextDisabled.vue';
-import BorradorButton from '@/Components/BorradorButton.vue';
-import WarningButton from '@/Components/WarningButton.vue';
+import { Head, useForm, Link } from '@inertiajs/vue3';
+import GreenButton from '@/Components/GreenButton.vue';
+import CargaAlmacenTable from '@/Components/CargaAlmacen.vue';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
-    productos: {
-        type: Object,
-    },
-    plantas: {
-        type: Object,
-    },
+    cargas: { type: Array, required:true },
+    codigo: { type: String },
+    comprobanteSalidas: { type: Object },
+    solicitud_id: { type:String},
+
 });
 
 const form = useForm({
-    usuario_id:'',
-    planta_id:'',
-    status:'',
-    carga: [],
+    solicitud_id: props.solicitud_id,
+    fecha_salida: new Date().toISOString().slice(0, 10),
+    empresa: '',
+    responsable: '',
+    camion:'',
+    placa:'',
+    licencia:'',
+    celular:'',
+    contenedor:'',
+    presinto:'',
+    reserva:'',
+    factura:'',
+    destino:'',
+    codigo_salida: props.codigo,
+    cargas:props.cargas,
+
 });
 
-const descripcion = ref('Cajas de Almendras');
-const lote = ref('');
-const producto = ref('');
-const cantidad = ref('');
-const carga = ref([]);
-
-const add = () => {
-    const kilosnetos = cantidad.value * 20;
-    const librasnetas = parseFloat((kilosnetos * 2.20462).toFixed(2));
-    const newData = [
-        producto.value.codigo_producto,
-        producto.value.nombre_producto,
-        descripcion.value,
-        lote.value,
-        cantidad.value,
-        kilosnetos,
-        librasnetas,
-    ];
-    carga.value.push(newData);
-    descripcion.value = 'Cajas de Almendras';
-    producto.value = '';
-    lote.value='';
-    cantidad.value = '';
-    kilosnetos = kilosnetos;
-    librasnetas= librasnetas;
-};
-form.carga = carga.value;
-defineEmits(['submit']);
-
-const remove = (index) => {
-    carga.value.splice(index, 1);
-  };
-
-const submitForm = (status) => {
-    form.status = status;
-    form.post(route('solicitudcargas.store'), {
+const submitForm = () => {
+    const alerta = Swal.mixin({
+        buttonsStyling: true,
     });
-}
+
+    alerta.fire({
+        title: '¿Está seguro de enviar el comprobante de salida?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-check"></i> Si, enviar.',
+        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            form.post(route('comprobante_salida.store'), {
+                // Puedes incluir datos adicionales si es necesario
+            }).then(response => {
+                // Muestra un mensaje de éxito
+                Swal.fire({
+                    title: 'Éxito!',
+                    text: 'Comprobante de salida creado exitosamente.',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    // Redirige a la página de comprobantes
+                    window.location.href = 'comprobante_salida'; // Ajusta la URL según sea necesario
+                });
+            }).catch(error => {
+                if (error.response && error.response.status === 422) {
+                // Manejo de errores de validación
+                const errors = error.response.data.errors;
+                for (const field in errors) {
+                    // Aquí puedes manejar cada error como desees
+                    console.error(`Error en ${field}: ${errors[field].join(', ')}`);
+                    // Mostrar el error en el formulario
+                    form.errors[field] = errors[field]; // Asegúrate de tener un objeto para errores
+                }
+                Swal.fire('Errores!', 'Por favor corrige los errores en el formulario.', 'error');
+                } else {
+                    console.error('Error al guardar:', error);
+                    Swal.fire('Error!', 'Ocurrió un error al guardar los cambios.', 'error');
+                }
+            });
+        }
+    });
+};
+
 </script>
 
 <template>
     <Head title="Crear Conocimiento" />
-
     <AuthenticatedLayout>
         <template #header>
-            Crear Solicitud de Carga
+            Crear Comprobante de Salida
         </template>
+        <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md">
+            <div class="px-4 py-3 flex">
+                <div class="mx-1">
+                    <Link :href="route('solicitudAlmacen.index')"
+                    class="inline-block rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-400 text-sm">
+                    <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
+                    </Link>
+                </div>
+                <div class="mx-1">
+                    <GreenButton @click.prevent="submitForm()">
+                    <i class="fa-solid fa-circle-check fa-lg" style="color: #ffffff;"></i> Guardar Salida</GreenButton>
+                </div>
+            </div>
+        </div>
     <div class="min-w-full overflow-x-auto rounded-lg shadow">
         <div class="w-full whitespace-no-wrap">
             <div class="border-b bg-gray-50 text-left text-xs tracking-wide text-gray-500">
                 <div class="border-b-2 px-6 py-4 text-left text-xs tracking-wider">
-                    <InputLabel value="Datos de Carga" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
-                    <form @submit.prevent="submitForm">
-                        <div class="grid grid-cols-2 gap-4 mt-4">
-                            <div>
-                                <InputLabel for="planta_id" value="Planta de Producción"></InputLabel>
-                                <select id="planta_id" v-model="form.planta_id" class="mt-2 block w-full rounded-md" required>
-                                    <option value="">-- Seleccione una opción --</option>
-                                    <option v-for="planta in plantas" :value="planta.id">{{ planta.nombre }}</option>
-                                </select>
-                                <InputError :message="form.errors.planta_id" class="mt-2"></InputError>
+                    <InputLabel value="Datos de Comprobante de Ingreso" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
+                    <form>
+                        <div class="grid grid-cols-4 gap-4 mt-4">
+                                <div>
+                                    <InputLabel value="Fecha de Salida"/>
+                                    <TextInput type="text" class="mt-2 block w-full" v-model="form.fecha_salida" required/>
+                                    <InputError :message="form.errors.fecha_salida" class="mt-2"></InputError>
+                                </div>
+                                <div>
+                                    <InputLabel value="Codigo de Salida"/>
+                                    <TextInput type="text" class="mt-2 block w-full" v-model="form.codigo_salida" required/>
+                                    <InputError :message="form.errors.codigo_salida" class="mt-2"></InputError>
+                                </div>
+                                <div>
+                                    <InputLabel value="Nro. Factura"></InputLabel>
+                                    <TextInput type="number" class="mt-2 block w-full"
+                                    v-model="form.factura" required placeholder="Ej. 34"></TextInput>
+                                    <InputError :message="form.errors.factura" class="mt-2"></InputError>
+                                </div>
+                                <div>
+                                    <InputLabel value="Destino"></InputLabel>
+                                    <TextInput list="form.destino" type="text" class="mt-2 block w-full"
+                                    v-model="form.destino" required
+                                    placeholder="Ej. SHANGHAI-CHINA"></TextInput>
+                                    <datalist id="form.destino" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.destino "> {{ comprobanteSalida.destino }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.destino" class="mt-2"></InputError>
+                                </div>
                             </div>
-                        </div>
-                        <br>
-                            <div class="grid grid-cols-5 gap-1 mt-2">
+                            <div class="grid grid-cols-3 gap-4 mt-4">
                                 <div>
-                                    <InputLabel for="descripcion" value="Descripcion" />
-                                    <TextDisabled id="descripcion" v-model="descripcion" type="text"
-                                    value="Cajas de Almendra" disabled/>
+                                    <InputLabel value="Nro. Contenedor"></InputLabel>
+                                    <TextInput list="form.contenedor" type="text" class="mt-2 block w-full"
+                                    v-model="form.contenedor" autofocus required placeholder="Ej. MSMU8175110"></TextInput>
+                                    <InputError :message="form.errors.contenedor" class="mt-2"></InputError>
                                 </div>
                                 <div>
-                                    <InputLabel for="lote" value="Lote" />
-                                    <TextInput id="lote" v-model="lote" type="text" placeholder="Ej. LOT-100 (EI)"/>
+                                    <InputLabel value="Nro. Presinto"></InputLabel>
+                                    <TextInput list="form.presinto" type="text" class="mt-2 block w-full"
+                                    v-model="form.presinto" autofocus required placeholder="Ej. EU26210622"></TextInput>
+                                    <InputError :message="form.errors.presinto" class="mt-2"></InputError>
                                 </div>
                                 <div>
-                                    <InputLabel for="producto_id" value="Producto"></InputLabel>
-                                    <select id="planta_id" v-model="producto" class="mt-1 block w-full rounded-md">
-                                        <option value="">-- Seleccione una opción --</option>
-                                        <option v-for="producto in productos"
-                                        :value="{codigo_producto:producto.codigo_producto, nombre_producto:producto.nombre_producto}">
-                                        {{ producto.nombre_producto }}</option>
-                                    </select>
-                                    <InputError :message="form.errors.producto_id" class="mt-2"></InputError>
-                                </div>
-                                <div>
-                                    <InputLabel for="cantidad" value="Cantidad"/>
-                                    <TextInput id="cantidad" v-model="cantidad" type="number" placeholder="Ej. 200" />
-                                </div>
-                                <div class="flex items-end">
-                                    <PrimaryButton type="button" @click="add()"
-                                    class="rounded-md bg-blue-600 px-2 py-2.5 text-white hover:bg-blue-500 text-sm block w-full mt-1 block w-full">
-                                    <i class="fa-solid fa-truck-ramp-box px" style="color: #ffffff;"></i>
-                                    Agregar
-                                    </PrimaryButton>
+                                    <InputLabel value="Nro. Reserva"></InputLabel>
+                                    <TextInput list="form.reserva" type="text" class="mt-2 block w-full"
+                                    v-model="form.reserva" autofocus required placeholder="Ej. EBKG08586208"></TextInput>
+                                    <InputError :message="form.errors.reserva" class="mt-2"></InputError>
                                 </div>
                             </div>
                             <br>
-
-                            <table class="w-full border-collapse font-semibold uppercase">
-                                <thead>
-                                    <tr class="bg-gray-200">
-                                        <th class="px-4 py-2">Codigo</th>
-                                        <th class="px-4 py-2">Tipo</th>
-                                        <th class="px-4 py-2">Descripción</th>
-                                        <th class="px-4 py-2">Lote</th>
-                                        <th class="px-4 py-2">Cantidad</th>
-                                        <th class="px-4 py-2">Kilos Netos</th>
-                                        <th class="px-4 py-2">Libras Netas</th>
-                                        <th class="px-4 py-2">Acción</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="(_, index) in carga" :key="index" class="border-b">
-                                    <td class="px-4 py-2"> {{ carga[index][0] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][1] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][2] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][3] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][4] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][5] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][6] }} </td>
-                                    <td class="px-4 py-2">
-                                        <WarningButton type="button" @click="remove(index, carga)">
-                                        <i class="fa-solid fa-trash-can px" style="color: #ffffff;"></i>
-                                        </WarningButton>
-                                    </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <div class="-mx-3 px py-4" >
-                                <div class="mx-3 py-2">
-                                    <BorradorButton :disabled="form.processing" @click.prevent="submitForm(0)">
-                                        <i class="fa-solid fa-save"></i> Guardar como Borrador
-                                    </BorradorButton>
+                            <InputLabel value="Datos de Empresa" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
+                            <div class="grid grid-cols-3 gap-4 mt-4">
+                                <div>
+                                    <InputLabel for="empresa" value="Empresa Transportista"/>
+                                    <TextInput list="form.empresa" type="text" class="mt-2 block w-full" v-model="form.empresa"
+                                    placeholder="Ej. Trans Huayana Kapac SRL."/>
+                                    <datalist id="form.empresa" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.empresa "> {{ comprobanteSalida.empresa }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.empresa" class="mt-2"></InputError>
                                 </div>
-                                <div class="mx-3 py-2">
-                                    <PrimaryButton :disabled="form.processing" @click.prevent="submitForm(1)">
-                                        <i class="fa-solid fa-save"></i> Guardar y Enviar
-                                    </PrimaryButton>
+                                <div>
+                                    <InputLabel for="conductor" value="Conductor"></InputLabel>
+                                    <TextInput list="form.responsable" type="text" class="mt-2 block w-full"
+                                    v-model="form.responsable" required placeholder="Ej. Dionicio Perez Quispe"></TextInput>
+                                    <datalist id="form.responsable" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.responsable "> {{ comprobanteSalida.responsable }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.responsable" class="mt-2"></InputError>
+                                </div>
+                                <div>
+                                    <InputLabel for="vehiculo" value="Vehiculo"></InputLabel>
+                                    <TextInput list="form.camion" type="text" class="mt-2 block w-full"
+                                    v-model="form.camion" required placeholder="Ej. Camion Tráiler Volvo Blanco"></TextInput>
+                                    <datalist id="form.camion" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.camion "> {{ comprobanteSalida.camion }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.camion" class="mt-2"></InputError>
                                 </div>
                             </div>
+                            <div class="grid grid-cols-3 gap-4 mt-4">
+                                <div>
+                                    <InputLabel for="licencia" value="Licencia"></InputLabel>
+                                    <TextInput list="form.licencia" type="text" class="mt-2 block w-full"
+                                    v-model="form.licencia" autofocus required placeholder="Ej. 8323421 LP"></TextInput>
+                                    <datalist id="form.licencia" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.licencia "> {{ comprobanteSalida.licencia }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.licencia" class="mt-2"></InputError>
+                                </div>
+                                <div>
+                                    <InputLabel for="placa" value="Placa"></InputLabel>
+                                    <TextInput list="form.placa" type="text" class="mt-2 block w-full"
+                                    v-model="form.placa" autofocus required placeholder="Ej. 420-WED"></TextInput>
+                                    <datalist id="form.placa" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.placa "> {{ comprobanteSalida.placa }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.placa" class="mt-2"></InputError>
+                                </div>
+                                <div>
+                                    <InputLabel for="celular" value="Celular"></InputLabel>
+                                    <TextInput list="form.celular" type="number" class="mt-2 block w-full"
+                                    v-model="form.celular" autofocus required
+                                    placeholder="Ej. 77373721"></TextInput>
+                                    <datalist id="form.celular" >
+                                        <option v-for="comprobanteSalida in comprobanteSalidas" :value="comprobanteSalida.celular "> {{ comprobanteSalida.celular }}</option>
+                                    </datalist>
+                                    <InputError :message="form.errors.celular" class="mt-2"></InputError>
+                                </div>
+                            </div>
+                            <br>
+                            <CargaAlmacenTable :cargas = "cargas" />
                     </form>
                 </div>
             </div>

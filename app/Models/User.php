@@ -17,19 +17,21 @@ class User extends Authenticatable
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
+     * protected $table = 'public._bp_usuarios';
      */
+    protected $table = 'public._bp_usuarios';
     protected $fillable = [
-        'ci',
-        'paterno',
-        'materno',
-        'name',
-        'email',
-        'celular',
-        'planta_id',
-        'rol',
-        'estado',
-
+        'usr_id',
+        'usr_prs_id',
+        'usr_usuario',
+        'password',
+        'usr_registrado',
+        'usr_modificado',
+        'usr_usr_id',
+        'usr_estado'
     ];
+    public $timestamps = false;
+    protected $primaryKey = 'usr_id';
 
     /**
      * The attributes that should be hidden for serialization.

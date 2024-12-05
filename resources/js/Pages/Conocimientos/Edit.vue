@@ -5,10 +5,12 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref, defineProps } from 'vue';
-import CargaTable from '@/Components/CargaTable.vue';
+import CargaPlanta from '@/Components/CargaPlanta.vue';
 import TextDisabled from '@/Components/TextDisabled.vue';
 import BorradorButton from '@/Components/BorradorButton.vue';
 import BlueButton from '@/Components/BlueButton.vue';
+import Swal from 'sweetalert2';
+import axios from 'axios';
 
 const props = defineProps({
     conocimientos: { type: Object, },
@@ -30,13 +32,63 @@ const form = useForm({
 
 });
 
-defineEmits(['submit']);
+const submitForm = (status, conocimientos) => {
+    const data = {
+        id: conocimientos.id,
+        codigo: form.codigo,
+        empresa: form.empresa,
+        conductor: form.conductor,
+        vehiculo: form.vehiculo,
+        propietario: form.propietario,
+        licencia: form.licencia,
+        placa: form.placa,
+        celular: form.celular,
+        planta_id: form.planta_id,
+        status: status,
+    };
 
-const submitForm = (status,conocimientos) => {
-    form.status = status;
-    form.put(route('conocimientos.update',conocimientos), {
+    Swal.fire({
+        title: 'Actualizando...',
+        text: 'Por favor, espere.',
+        allowOutsideClick: false,
+        onBeforeOpen: () => {
+            Swal.showLoading();
+        }
     });
-}
+
+    axios.put(route('conocimientos.update'), data)
+        .then(response => {
+            console.log('Respuesta del servidor:', response);
+            if (response.data === 'Actualizado exitosamente') {
+                Swal.fire({
+                    title: 'Actualizado!',
+                    text: 'Los cambios han sido actualizados.',
+                    icon: 'success',
+                    willClose: () => {
+                        window.location.href = route('conocimientos.index');
+                    }
+                });
+            } else {
+                Swal.fire('Info!', 'Respuesta inesperada del servidor.', 'info');
+            }
+        })
+        .catch(error => {
+            if (error.response && error.response.status === 422) {
+                // Manejo de errores de validación
+                const errors = error.response.data.errors;
+                for (const field in errors) {
+                    // Aquí puedes manejar cada error como desees
+                    console.error(`Error en ${field}: ${errors[field].join(', ')}`);
+                    // Mostrar el error en el formulario
+                    form.errors[field] = errors[field]; // Asegúrate de tener un objeto para errores
+                }
+                Swal.fire('Errores!', 'Por favor corrige los errores en el formulario.', 'error');
+            } else {
+                console.error('Error al guardar:', error);
+                Swal.fire('Error!', 'Ocurrió un error al guardar los cambios.', 'error');
+            }
+        });
+};
 
 </script>
 
@@ -48,6 +100,12 @@ const submitForm = (status,conocimientos) => {
         </template>
         <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
             <div class="px-4 py-3 flex">
+                <div class="mx-1">
+                    <Link :href="route('conocimientos.index')"
+                    class="inline-block rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-400 text-sm">
+                    <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
+                    </Link>
+                </div>
                 <div class="mx-1">
                     <BorradorButton :disabled="form.processing" @click.prevent="submitForm(0,conocimientos)">
                     <i class="fa-solid fa-save fa-lg"> </i> Guardar Borrador</BorradorButton>
@@ -122,18 +180,12 @@ const submitForm = (status,conocimientos) => {
                                 <InputError :message="form.errors.celular" class="mt-2"></InputError>
                             </div>
                         </div>
-                        <br>
-                        <CargaTable :cargas="cargas"/>
-                        <br>
-                        <div class="-mx-3 px py-4" >
-                            <div class="mx-3 py-2">
-                                <Link :href="route('conocimientos.index')"
-                                :class="'px-4 py-2 bg-gray-400 text-white border rounded-md font-semibold text-xs'">
-                                <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
-                                </Link>
-                            </div>
-                        </div>
                     </form>
+                        <br>
+                        <CargaPlanta :cargas="cargas"/>
+                        <br>
+
+
                 </div>
             </div>
         </div>

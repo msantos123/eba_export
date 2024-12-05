@@ -206,7 +206,7 @@
             <td colspan="4">DATOS DE TRANSPORTE</td>
         <tr>
           <td>Por cuenta de: </td>
-          <td>{{ $almacen->name }} {{ $almacen->paterno }} {{ $almacen->materno }}</td>
+          <td>Jose Luis Santos Castillo</td>
           <td>Camión: </td>
           <td>{{ $comprobanteIngreso->vehiculo }}</td>
         </tr>
@@ -243,10 +243,10 @@
     <tr>
     <tr>
         <th>#</th>
-        <th>Grado/Tipo</th>
+        <th>Codigo</th>
+        <th>Producto</th>
         <th>Descripcion</th>
         <th>Lote</th>
-        <th>Calidad</th>
         <th>Cantidad</th>
         <th>Kilos Netos</th>
         <th>Libras Netas</th>
@@ -254,10 +254,10 @@
     @foreach ($cargas as $carga)
     <tr>
         <td>{{ $loop->index + 1 }}</td>
-        <td>{{ $carga->gradotipo }}</td>
+        <td>{{ $carga->codigo_producto }}</td>
+        <td>{{ $carga->nombre_producto }}</td>
         <td>{{ $carga->descripcion }}</td>
         <td>{{ $carga->lote }}</td>
-        <td>{{ $carga->calidad }}</td>
         <td>{{ $carga->cantidad }}</td>
         <td>{{ $carga->kilosnetos }}</td>
         <td>{{ $carga->librasnetas }}</td>

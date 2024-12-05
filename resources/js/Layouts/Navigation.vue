@@ -17,9 +17,15 @@
                 </template>
                 Inicio
             </nav-link>
+            <nav-link :href="route('inventario.index')" :active="route().current('inventario.index')">
+                <template #icon>
+                    <i class="fa-solid fa-warehouse fa-lg" style="color: #ffffff;"></i>
+                </template>
+                Plantas Industriales
+            </nav-link>
             <!--NAVEGADOR SISTEMA-->
             <a class="flex items-center mt-4 py-2 px-6 text-gray-100" @click="showSistema = !showSistema"
-            v-if ="$page.props.user.permissions.includes('read usuario')">
+            v-if ="$page.props.user.permissions.includes('layout sistemas')">
                 <i class="fa-solid fa-address-card fa-lg" style="color: #ffffff;"></i>
                 <span class="mx-3">Sistema</span>
             </a>
@@ -42,7 +48,7 @@
             </transition>
 
             <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showCarga = !showCarga"
-            v-if ="$page.props.user.permissions.includes('read cargas')">
+            v-if ="$page.props.user.permissions.includes('layout cargas')">
                 <i class="fa-solid fa-truck fa-lg" style="color: #ffffff;"></i>
                 <span class="mx-3">Cargas</span>
             </a>
@@ -54,20 +60,21 @@
                 <div v-show="showCarga">
                     <ul class="overflow-hidden p-2 mx-4 mt-2 space-y-2 text-sm font-medium text-white bg-gray-700 bg-opacity-50 rounded-md shadow-inner"
                         aria-label="submenu">
-                        <li class="px-2 py-1 transition-colors duration-150">
+                        <li class="px-2 py-1 transition-colors duration-150"
+                        v-if ="$page.props.user.permissions.includes('layout solicitudcarga')">
                             <Link class="w-full" :href="route('solicitudcargas.index')">Solicitud de Carga</Link>
                         </li>
-                        <li class="px-2 py-1 transition-colors duration-150">
+                        <li class="px-2 py-1 transition-colors duration-150"
+                        v-if ="$page.props.user.permissions.includes('layout conocimientos')">
                             <Link class="w-full" :href="route('conocimientos.index')">Conocimiento de Carga</Link>
                         </li>
                     </ul>
                 </div>
             </transition>
 
-            <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showInventario = !showInventario"
-            v-if ="$page.props.user.permissions.includes('read inventario')">
+            <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showInventario = !showInventario">
                 <i class="fa-solid fa-warehouse fa-lg" style="color: #ffffff;"></i>
-                <span class="mx-3">Inventario</span>
+                <span class="mx-3">Almacen El Alto</span>
             </a>
             <transition
                 enter-to-class="transition-all duration-300 ease-in-out"
@@ -78,96 +85,77 @@
                     <ul class="overflow-hidden p-2 mx-4 mt-2 space-y-2 text-sm font-medium text-white bg-gray-700 bg-opacity-50 rounded-md shadow-inner"
                         aria-label="submenu">
                         <li class="px-2 py-1 transition-colors duration-150">
+                            <Link class="w-full" :href="route('solicitudAlmacen.index')">Solicitud Almacenes</Link>
+                        </li>
+                        <li class="px-2 py-1 transition-colors duration-150"
+                        v-if ="$page.props.user.permissions.includes('layout ingreso')">
                             <Link class="w-full" :href="route('comprobante_ingreso.index')">Ingreso Almacenes</Link>
                         </li>
-                        <li class="px-2 py-1 transition-colors duration-150">
+                        <li class="px-2 py-1 transition-colors duration-150"
+                        v-if ="$page.props.user.permissions.includes('layout salida')">
                             <Link class="w-full" :href="route('kardexs.index')">Kardex</Link>
                         </li>
-                        <li class="px-2 py-1 transition-colors duration-150">
+                        <li class="px-2 py-1 transition-colors duration-150"
+                        v-if ="$page.props.user.permissions.includes('layout kardex')">
                             <Link class="w-full" :href="route('comprobante_salida.index')">Salida Almacenes</Link>
                         </li>
                     </ul>
                 </div>
             </transition>
-            <nav-link :href="route('pre_factura.index')" :active="route().current('pre_factura')">
+            <nav-link :href="route('etiquetas.index')" :active="route().current('etiquetas.index')">
+                <template #icon>
+                    <i class="fa-solid fa-tags fa-lg" style="color: #ffffff;"></i>
+                </template>
+                Etiquetas
+            </nav-link>
+            <nav-link :href="route('tracking.index')" :active="route().current('tracking.index')">
+                <template #icon>
+                    <i class="fa-solid fa-location-dot fa-lg"></i>
+                </template>
+                Tracking
+            </nav-link>
+            <nav-link :href="route('contratos.index')" :active="route().current('contratos.index')">
+                <template #icon>
+                    <i class="fa-solid fa-file-signature fa-lg"></i>
+                </template>
+                Contratos
+            </nav-link>
+            <nav-link :href="route('costos.index')" :active="route().current('costos.index')">
+                <template #icon>
+                    <i class="fa-solid fa-coins fa-lg" style="color: #ffffff;"></i>
+                </template>
+                Costos
+            </nav-link>
+            <nav-link :href="route('acopio.index')" :active="route().current('acopio.index')">
+                <template #icon>
+                    <i class="fa-solid fa-tree fa-lg" style="color: #ffffff;"></i>
+                </template>
+                Planificacion
+            </nav-link>
+            <nav-link :href="route('poa.index')" :active="route().current('poa.index')">
+                <template #icon>
+                    <i class="fa-regular fa-file-powerpoint fa-lg" style="color: #ffffff;"></i>
+                </template>
+                POA
+            </nav-link>
+            <nav-link :href="route('liberacion.index')" :active="route().current('liberacion.index')">
+                <template #icon>
+                    <i class="fa-solid fa-check-to-slot fa-lg"></i>
+                </template>
+                Liberación
+            </nav-link>
+            <nav-link :href="route('pre_factura.index')" :active="route().current('pre_factura.index')">
                 <template #icon>
                     <i class="fa-solid fa-file-invoice-dollar fa-lg" style="color: #ffffff;"></i>
                 </template>
                 Pre Factura
             </nav-link>
-
-
-            <!--nav-link :href="route('conocimientos.index')" :active="route().current('conocimientos.index')">
+            <nav-link :href="route('estadistica.index')" :active="route().current('estadistica.index')">
                 <template #icon>
-                    <i class="fa-solid fa-truck fa-lg" style="color: #ffffff;"></i>
+                    <i class="fa-solid fa-chart-line fa-lg" style="color: #ffffff;"></i>
                 </template>
-                Conocimientos
+                Estadistica
             </nav-link>
-
-            <nav-link :href="route('departments.index')" :active="route().current('departments.index')">
-                <template #icon>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </template>
-                Department
-            </nav-link>
-
-            <nav-link :href="route('employees.index')" :active="route().current('employees.index')">
-                <template #icon>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </template>
-                Employee
-            </nav-link>
-
-            <nav-link :href="route('graphic')" :active="route().current('graphic')">
-                <template #icon>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </template>
-                Graphic
-            </nav-link>
-
-            <nav-link :href="route('reports')" :active="route().current('reports')">
-                <template #icon>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                </template>
-                Reports
-            </nav-link>
-
-
-            <nav-link :href="route('about')" :active="route().current('about')">
-                <template #icon>
-                    <svg class="w-5 h-5" aria-hidden="true" fill="none" stroke-linecap="round" stroke-linejoin="round"
-                         stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
-                        <path
-                            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path>
-                    </svg>
-                </template>
-                About us
-            </nav-link>
-
-            <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showingTwoLevelMenu = !showingTwoLevelMenu">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"></path>
-                </svg>
-                <span class="mx-3">Two-level menu</span>
-            </a-->
-
         </nav>
     </div>
 

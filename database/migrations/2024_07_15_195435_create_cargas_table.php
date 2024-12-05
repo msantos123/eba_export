@@ -12,13 +12,19 @@ return new class extends Migration
             $table->id();
             $table->string('codigo_producto');
             $table->string('nombre_producto');
-            $table->date('fecha_produccion')->nullable();
             $table->string('descripcion');
-            $table->string('lote',20)->nullable();
+            $table->string('calidad')->nullable();
+            $table->string('lote',20);
             $table->integer('cantidad');
+            $table->double('costo_caja')->nullable();
             $table->double('kilosnetos', 10);
             $table->double('librasnetas', 10);
+            $table->double('precio_kilo',10)->nullable();
+            $table->double('precio_libra',10)->nullable();
+            $table->foreignId('receta_id');
             $table->foreignId('solicitud_cargas');
+            $table->foreignId('kardex_id')->nullable();
+            $table->integer('estado')->default(0);
             $table->timestamps();
         });
     }

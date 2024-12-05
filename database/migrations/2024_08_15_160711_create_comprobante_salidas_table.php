@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('comprobante_salidas', function (Blueprint $table) {
             $table->id();
-            $table->string('fecha_salida');
+            $table->date('fecha_salida');
             $table->string('empresa',100);
             $table->string('responsable',100);
             $table->string('camion',50);
@@ -25,6 +25,9 @@ return new class extends Migration
             $table->string('reserva',20);
             $table->integer('factura');
             $table->string('destino',100);
+            $table->string('codigo_salida',20);
+            $table->string('pdf_comprobante_salida',100)->nullable();
+            $table->integer('liberacion')->default(0);
             $table->timestamps();
         });
     }

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Conocimiento;
 use App\Models\Department;
 use App\Models\Solicitudcarga;
+use App\Models\SigaSalidaDetalle;
 //request
 use App\Http\Requests\ConocimientoRequest;
 //complementos
@@ -18,91 +19,65 @@ use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class ConocimientoController extends Controller
 {
-    public function index()
+    public function index()//uso
     {
-        $user = Auth::user();
-
-        $conocimiento = Conocimiento::select('conocimientos.id','conocimientos.codigo',
-        'empresa','conductor','vehiculo','placa','celular','conocimientos.estado',
-        'solicitudcargas.planta_id as planta','plantas.nombre as plantaNombre')
-        ->join('solicitudcargas','solicitudcargas.id','=','conocimientos.solicitud_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->orderBy('conocimientos.codigo', 'desc');
-
-        if($user->planta_id != 1 && $user->planta_id != 2)
-        {
-            $conocimiento->whereIn('solicitudcargas.planta_id',[$user->planta_id]);
-        }
-
-        $conocimiento = $conocimiento->get();
-
-        return Inertia::render('Conocimientos/Index',['conocimientos'=>$conocimiento]);
+        $conocimiento = Conocimiento::indexConocimiento();
+        return Inertia::render('Conocimientos/Index',[
+            'conocimientos'=>$conocimiento
+        ]);
     }
 
-    public function create()
+    public function create($id)//uso
     {
+        $cargas =  Carga::where('solicitud_cargas', $id)->get();
+        $solicitudcarga = Solicitudcarga::verSolicitudcarga($id);
+        $conocimientos = Conocimiento::all();
 
+        return Inertia::render('Conocimientos/Create', [
+            'conocimientos'     => $conocimientos,
+            'solicitudcarga'    => $solicitudcarga,
+            'cargas'            => $cargas,
+        ]);
     }
 
-    public function store(ConocimientoRequest $request)
+    public function store(ConocimientoRequest $request)//uso
     {
-        //dd($request);
         $solicitudcarga = SolicitudCarga::find($request->input('solicitud_id'));
-        $solicitudcarga->estado = 3;
+        $solicitudcarga->estado = 2;
         $solicitudcarga->save();
 
         $request->merge(['usuario_id' => auth()->id()]);
-        $conocimiento = Conocimiento::create([
-            'usuario_id' => $request->input('usuario_id'),
-            'empresa' => $request->input('empresa'),
-            'conductor' => $request->input('conductor'),
-            'vehiculo' => $request->input('vehiculo'),
-            'propietario' => $request->input('propietario'),
-            'licencia' => $request->input('licencia'),
-            'placa' => $request->input('placa'),
-            'celular' => $request->input('celular'),
-            'solicitud_id' => $request->input('solicitud_id'),
-        ]);
+        $conocimiento = Conocimiento::guardarConocimiento($request);
 
-        return redirect('conocimientos');
+        return response()->json('Guardado exitosamente');
     }
 
-    public function show($id)
+    public function show($id)//uso
     {
         $conocimientos = Conocimiento::where('id',$id)->first();
-        $solicitudId = $conocimientos->solicitud_id;
-        $solicitudcarga = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.codigo',
-        'solicitudcargas.usuario_id','solicitudcargas.planta_id','solicitudcargas.created_at','solicitudcargas.estado',
-        'users.name as nombre','users.paterno as paterno','users.materno as materno','plantas.nombre as planta_nombre')
-        ->join('users','users.id','=','solicitudcargas.usuario_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->where('solicitudcargas.id',$solicitudId)->first();
-        $solicitudId = $solicitudcarga->id;
-        $cargas = Carga::where('solicitud_cargas', $solicitudId)->get();
+        $solicitudcarga = Solicitudcarga::verSolicitudcarga($conocimientos->solicitud_id);
+        $cargas = Carga::where('solicitud_cargas', $solicitudcarga->id)->get();
+        $salidaDetalle = SigaSalidaDetalle::verSigaSalidaDetalle($solicitudcarga->salida_inventario);
 
         return Inertia::render('Conocimientos/Show', [
             'cargas' => $cargas,
             'solicitudcarga' => $solicitudcarga,
             'conocimientos' => $conocimientos,
+            'salidaDetalle'     => $salidaDetalle,
         ]);
     }
 
-    public function edit($id)
+    public function edit($id)//uso
     {
         $conocimientos = Conocimiento::where('id',$id)->first();
-
         $cargas =  Carga::where('solicitud_cargas', $conocimientos->solicitud_id)->get();
-
-        $solicitudcarga = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.codigo',
-        'solicitudcargas.usuario_id','solicitudcargas.planta_id','solicitudcargas.created_at','solicitudcargas.estado',
-        'users.name as nombre','users.paterno as paterno','users.materno as materno','plantas.nombre as planta_nombre')
-        ->join('users','users.id','=','solicitudcargas.usuario_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->where('solicitudcargas.id',$conocimientos->solicitud_id)->first();
-
+        $solicitudcarga = Solicitudcarga::verSolicitudcarga($conocimientos->solicitud_id);
 
         return Inertia::render('Conocimientos/Edit', [
             'conocimientos' => $conocimientos,
@@ -111,68 +86,70 @@ class ConocimientoController extends Controller
         ]);
     }
 
-    public function update(ConocimientoRequest $request, Conocimiento $conocimiento)
+    public function update(ConocimientoRequest $request)//uso
     {
+        $conocimiento = Conocimiento::where('id',$request->id)->first();
         $conocimiento->update($request->all());
 
         if ($request->input('status') == 1) {
             $codigo = Conocimiento::generarCodigoConocimiento($request);
+            //Log::debug('Código generado para depuración:', ['codigo' => $codigo]);
             $conocimiento->codigo = $codigo;
             $conocimiento->estado = $request->input('status');
             $conocimiento->save();
         }
 
-        return redirect('conocimientos');
+        return response()->json('Actualizado exitosamente');
     }
 
-    public function pdf($conocimientoId)
+    public function pdf($conocimientoId)//uso
     {
-        $conocimientos = Conocimiento::select('conocimientos.id','conocimientos.codigo',
-        'conocimientos.usuario_id as usuario_planta','empresa','conductor','vehiculo',
-        'propietario','licencia','placa','conocimientos.celular','conocimientos.estado',
-        'plantas.nombre as planta','users.paterno as paterno','users.materno as materno',
-        'users.name as nombre','conocimientos.solicitud_id',
-        DB::raw('SUM(cargas.cantidad) as total_cantidad'),
-        DB::raw('SUM(cargas.kilosnetos) as total_kilosnetos'),
-        DB::raw('SUM(cargas.librasnetas) as total_librasnetas'))
-        ->join('solicitudcargas','solicitudcargas.id','=','conocimientos.solicitud_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->join('cargas', 'cargas.solicitud_cargas', '=', 'solicitudcargas.id')
-        ->join('users', 'users.id','=','conocimientos.usuario_id')
-        ->groupBy('conocimientos.id', 'conocimientos.codigo', 'conocimientos.usuario_id',
-                'empresa', 'conductor', 'vehiculo', 'propietario', 'licencia', 'placa',
-                'conocimientos.celular', 'conocimientos.estado', 'plantas.nombre', 'users.paterno',
-                'users.materno', 'users.name', 'conocimientos.solicitud_id')
-        ->where('conocimientos.id', $conocimientoId)->first();
-
-        $almacen = User::where('planta_id',2)->first();
-
+        $conocimientos = Conocimiento::pdfConocimiento($conocimientoId);
         $cargas =  Carga::where('solicitud_cargas', $conocimientos->solicitud_id)->get();
 
         $pdf = app('dompdf.wrapper');
         $pdf->setPaper('letter');
-        $pdf = $pdf->loadView('conocimiento', compact('conocimientos','cargas','almacen'));
+
+        if($conocimientos->estado == 1)
+        { $pdf = $pdf->loadView('conocimiento', compact('conocimientos','cargas'));
+        }else{
+            $pdf = $pdf->loadView('conocimiento_borrador', compact('conocimientos','cargas'));
+        }
         return $pdf->stream('conocimientodecarga.pdf');
     }
 
-    public function CrearConocimiento($id)
+    public function upload(Request $request)//uso
     {
-        $cargas =  Carga::where('solicitud_cargas', $id)->get();
-
-        $solicitudcarga = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.codigo',
-        'solicitudcargas.usuario_id','solicitudcargas.planta_id','solicitudcargas.created_at','solicitudcargas.estado',
-        'users.name as nombre','users.paterno as paterno','users.materno as materno','plantas.nombre as planta_nombre')
-        ->join('users','users.id','=','solicitudcargas.usuario_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->where('solicitudcargas.id',$id)->first();
-
-        $conocimientos = Conocimiento::all();
-
-        return Inertia::render('Conocimientos/Create', [
-            'conocimientos' => $conocimientos,
-            'solicitudcarga' => $solicitudcarga,
-            'cargas' => $cargas,
+        $request->validate([
+            'file' => 'required|mimes:pdf|max:2048',
+            'conocimiento_id' => 'required|integer',
         ]);
+
+        try {
+            $file = $request->file('file');
+            $conocimientoId = $request->input('conocimiento_id');
+
+            // Crear un nombre único para el archivo usando el ID de conocimiento
+            $uniqueFileName = "conocimiento_{$conocimientoId}_" . Str::uuid() . '.' . $file->getClientOriginalExtension();
+
+            // Guardar el archivo en el storage
+            $path = $file->storeAs('public/conocimientos', $uniqueFileName);
+
+            // Guardar el nombre del archivo en la base de datos
+            $conocimiento = Conocimiento::find($conocimientoId);
+            $conocimiento->pdf_conocimiento = $uniqueFileName;
+            $conocimiento->save();
+
+            // Retornar la respuesta con la ruta y el nombre del archivo
+            return response()->json([
+                'path' => $uniqueFileName,
+                'file_name' => $uniqueFileName
+            ], 200);
+        } catch (\Exception $e) {
+            // Manejar cualquier excepción y retornar un error
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
+
 
 }

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('celular', 8);
             $table->foreignId('solicitud_id');
             $table->integer('estado')->default(0);
-
+            $table->string('pdf_conocimiento',100)->nullable();
             $table->timestamps();
         });
     }

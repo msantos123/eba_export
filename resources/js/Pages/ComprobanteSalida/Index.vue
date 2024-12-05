@@ -1,12 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DangerButton from '@/Components/DangerButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import Swal from 'sweetalert2';
-import vueTailwindPaginationUmd from '@ocrv/vue-tailwind-pagination';
 
 const props = defineProps({
-    comprobanteIngreso: {
+    comprobanteSalida: {
         type: Object,
     }
 });
@@ -14,46 +11,6 @@ const props = defineProps({
 const form = useForm({
     id:''
 });
-
-const deleteDepartment = (id, codigo) =>{
-    const alerta = Swal.mixin({
-        buttonsStyling:true,
-    });
-    alerta.fire({
-        title:'Esta seguro de eliminar el conocimiento de carga con codigo '+codigo+'?',
-        icon: 'question',
-        showCancelButton:true,
-        confirmButtonText:'<i class="fa-solid fa-check"></i> Si, borrar.',
-        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
-    }).then((result)=>{
-        if(result.isConfirmed){
-            form.delete(route('conocimientos.destroy',id));
-        }
-    });
-}
-
-const ok = (msj) => {
-    form.reset();
-    Swal.fire({title:msj,icon:'success'});
-}
-
-const ingreso = (id, codigo) =>{
-    const alerta = Swal.mixin({
-        buttonsStyling:true,
-    });
-    alerta.fire({
-        title:'Esta seguro que desea recibir la carga con '+codigo+'?',
-        icon: 'question', showCancelButton:true,
-        confirmButtonText:'<i class="fa-solid fa-check"></i> Si.',
-        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
-    }).then((result)=>{
-        if(result.isConfirmed){
-            form.get(route('conocimientos.ingreso',id),{
-                onSuccess: () => {ok('Carga Recibida')}
-            });
-        }
-    });
-}
 
 </script>
 
@@ -64,16 +21,6 @@ const ingreso = (id, codigo) =>{
         <template #header>
             Comprobantes de Salida
         </template>
-        <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
-            <div class="-mx-3 px-4 py-2">
-                <div class="mx-3" >
-                    <Link :href="route('comprobante_salida.create')"
-                        class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
-                        <i class="fa-solid fa-clipboard-list px-1" style="color: #ffffff;"></i> Nuevo Comprobante de Salida
-                    </Link>
-                </div>
-            </div>
-        </div>
             <div class="min-w-full overflow-x-auto rounded-lg shadow">
                 <table class="w-full whitespace-no-wrap">
                     <thead>
@@ -82,26 +29,19 @@ const ingreso = (id, codigo) =>{
                                 #
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Fecha de Ingreso
+                                Fecha de Salida
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Codigo Ingreso
+                                Codigo Salida
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Nro. CEFO
+                                Factura
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Procedencia
+                                Destino
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Codigo<br>
-                                Conocimiento
-                            </th>
-                            <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Carga
-                            </th>
-                            <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Estado
+                                Firmado
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Ver
@@ -112,55 +52,38 @@ const ingreso = (id, codigo) =>{
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="com, i in comprobanteIngreso" :key="com.id">
+                        <tr v-for="com, i in comprobanteSalida" :key="com.id">
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">{{ (i+1) }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ com.fecha_ingreso }}</p>
+                                <p class="text-gray-900 whitespace-no-wrap">{{ com.fecha_salida }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ com.codigo_ingreso }}</p>
+                                <p class="text-gray-900 whitespace-no-wrap">{{ com.codigo_salida }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ com.cefo }}</p>
+                                <p class="text-gray-900 whitespace-no-wrap">{{ com.factura }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ com.plantas_nombre }}</p>
-                            </td>
-                            <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ com.codigo }}</p>
-                            </td>
-                            <td class="border-b border-gray-200 bg-white text-sm">
-                                <table class="borde-2 border-separate bg-gray-50 text-center text-xs text-gray-500">
-                                    <tr >
-                                        <th class="px-3">Producto</th>
-                                        <th class="px-3">Grado/Tipo</th>
-                                        <th class="px-3">Cantidad</th>
-                                    </tr>
-                                    <tr v-for="cargas, i in com.vercargas" :key="cargas.id">
-                                        <td>{{ cargas.codigo_producto }}</td>
-                                        <td>{{ cargas.lote }}</td>
-                                        <td>{{ cargas.cantidad }}</td>
-                                    </tr>
-                                </table>
+                                <p class="text-gray-900 whitespace-no-wrap">{{ com.destino }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">
-                                <span v-if="com.estado === 0" class="bg-green-400 px-2 py-1 rounded-md">Recibido</span>
-                                <span v-else-if="com.estado === 1" class="bg-blue-400 px-2 py-1 rounded-md">Ingresado</span>
+                                <span v-if="com.pdf_comprobante_salida !== null" class="bg-green-400 px-2 py-1 rounded-md">Si</span>
+                                <span v-else-if="com.pdf_comprobante_salida === null" class="bg-red-400 px-2 py-1 rounded-md">No</span>
                                 </p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
-                                <Link :href="route('comprobante_ingreso.edit', com.id)"
-                                :class="'px-4 py-2 bg-yellow-400 text-white border rounded-md font-semibold text-xs'">
-                                <i class="fa-solid fa-chalkboard-user fa-lg" style="color: #ffffff;"></i>
+                                <Link :href="route('comprobante_salida.show', com.id)"
+                                class="inline-block rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-400 text-sm">
+                                <i class="fa-solid fa-eye" style="color: #ffffff;"></i>
                                 </Link>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
-                                    <a :href="route('comprobante_ingreso.pdf', com.id)" target="_blank"
-                                    :class="'px-4 py-2 bg-blue-400 text-white border rounded-md font-semibold text-xs'">
-                                    <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i></a>
+                                <a :href="route('comprobante_salida.pdf', com.id)" target="_blank"
+                                class="inline-block rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-400 text-sm">
+                                <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i></a>
                             </td>
                         </tr>
                     </tbody>

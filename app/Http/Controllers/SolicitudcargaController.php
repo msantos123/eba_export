@@ -8,158 +8,158 @@ use App\Models\Carga;
 use App\Models\User;
 use App\Models\Solicitudcarga;
 use App\Models\Kardex;
+use App\Models\Inventario;
+use App\Models\CargaDetalle;
+use App\Models\SalidaInventario;
+use App\Models\SalidaInventarioDetalle;
+use App\Models\SigaSalidaDetalle;
 //request
 use App\Http\Requests\SolicitudcargaRequest;
 //otros
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class SolicitudcargaController extends Controller
 {
-    public function index()
+    public function index()//uso
     {
-        $user = Auth::user();
-        $solicitudcarga = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.codigo',
-        'solicitudcargas.estado','users.name as usuario','plantas.nombre as planta',
-        DB::raw('DATE(solicitudcargas.created_at) as fecha'),
-        DB::raw('SUM(cargas.cantidad) as total_cantidad'),
-        DB::raw('SUM(cargas.kilosnetos) as total_kilosnetos'),
-        DB::raw('SUM(cargas.librasnetas) as total_librasnetas'))
-        ->join('users', 'users.id','=','solicitudcargas.usuario_id')
-        ->join('plantas', 'plantas.id','=','solicitudcargas.planta_id')
-        ->join('cargas', 'cargas.solicitud_cargas', '=', 'solicitudcargas.id')
-        ->groupBy('solicitudcargas.id','solicitudcargas.created_at','solicitudcargas.codigo',
-        'solicitudcargas.estado', 'users.name', 'plantas.nombre');
-
-        if ($user->planta_id != 1)
-        {
-            $solicitudcarga->whereIn('solicitudcargas.planta_id', [$user->planta_id]);
-        }
-        $solicitudcarga = $solicitudcarga->get();
-        //dd($solicitudcarga);
-
-        return Inertia::render('Cargas/Index',['solicitudcarga'=>$solicitudcarga]);
-    }
-
-    public function create()
-    {
-        $plantas = Planta::where('tipo','Planta')->where('estado',1)->get();
-
-        $productos = Producto::all();
-        return Inertia::render('Cargas/Create',['plantas'=>$plantas, 'productos'=>$productos]);
-    }
-
-    public function store(Request $request)
-    {
-        $request->merge(['usuario_id' => auth()->id()]);
-        $solicitudcarga = Solicitudcarga::create([
-            'planta_id' => $request->input('planta_id'),
-            'usuario_id' => $request->input('usuario_id'),
-            'estado' => $request->status,
+        $solicitudcarga = Solicitudcarga::indexSolicitudCarga();
+        $plantas = Planta::all();
+        return Inertia::render('Cargas/Index',[
+            'solicitudcarga'=>$solicitudcarga,
+            'plantas'=>$plantas,
         ]);
-        foreach ($request->input('carga') as $detail) {
-            $carga = Carga::create([
-                'codigo_producto'   =>      $detail[0],
-                'nombre_producto'   =>      $detail[1],
-                'descripcion'       =>      $detail[2],
-                'cantidad'          =>      $detail[3],
-                'kilosnetos'        =>      $detail[4],
-                'librasnetas'       =>      $detail[5],
-                'solicitud_cargas'  =>      $solicitudcarga->id,
-
-            ]);
-        }
-        return redirect('solicitudcargas');
     }
 
-    public function show(Solicitudcarga $solicitudcarga)
+    public function show($id)//uso
     {
-        $solicitudId = $solicitudcarga->id;
-        $solicitudcarga = Solicitudcarga::select('solicitudcargas.id','solicitudcargas.codigo',
-        'solicitudcargas.usuario_id','solicitudcargas.planta_id','solicitudcargas.created_at','solicitudcargas.estado',
-        'users.name as nombre','users.paterno as paterno','users.materno as materno','plantas.nombre as planta_nombre')
-        ->join('users','users.id','=','solicitudcargas.usuario_id')
-        ->join('plantas','plantas.id','=','solicitudcargas.planta_id')
-        ->where('solicitudcargas.id',$solicitudId)->first();
-        $cargas = Carga::where('solicitud_cargas',$solicitudId)->get();
-
+        $solicitudcarga = Solicitudcarga::verSolicitudcarga($id);
+        $cargas = Carga::where('solicitud_cargas',$id)->get();
         return Inertia::render('Cargas/Show', [
             'cargas' => $cargas,
             'solicitudcarga' => $solicitudcarga,
         ]);
-
     }
 
-    public function edit(Solicitudcarga $solicitudcarga)
+    public function delete($id)//uso
     {
-        //dd($solicitudcarga);
-        $solicitudcargaId = $solicitudcarga->id;
-        $kardexs=Kardex::select('kardexes.*')
-        ->where('kardexes.proveedor_id',$solicitudcarga->planta_id)
-        ->get();
+        $solicitudCarga = SolicitudCarga::find($id);
 
-        $plantas = Planta::all();
-        $productos = Producto::all();
-        $cargas =  Carga::where('solicitud_cargas', $solicitudcargaId)->get();
+        if (!$solicitudCarga) {
+            return response()->json(['error' => 'Solicitud de carga no encontrada.'], 404);
+        }
 
+        $solicitudCarga->delete();
+        return response()->json(['success' => 'Solicitud de carga eliminada con éxito.']);
+    }
+
+    public function store(Request $request)//uso
+    {
+        $request->merge(['usuario_id' => auth()->id()]);
+        Solicitudcarga::crearSolicitudcarga($request->all());
+        return redirect('solicitudcargas/index');
+    }
+
+    public function edit($id, $planta_id)//uso
+    {
+        $solicitudcarga = Solicitudcarga::find($id);
+        $cargas = Carga::where('solicitud_cargas',$id)->get();
+        $salidaInventario = SalidaInventario::indexSalidaInventario($planta_id);
         return Inertia::render('Cargas/Edit', [
+            'cargas' => $cargas,
+            'planta_id' =>$planta_id,
             'solicitudcarga' => $solicitudcarga,
-            'plantas'=>$plantas,
-            'cargas'=>$cargas,
-            'productos'=>$productos,
-            'kardexs'=>$kardexs,
+            'salidaInventario' => $salidaInventario,
         ]);
     }
 
-    public function update(Request $request, Solicitudcarga $solicitudcarga)
+    public function update(Request $request)//uso
     {
-        if($request->input('status') == 2)
-        {
-            $codigo = Solicitudcarga::generarCodigoSol($request);
-            $solicitudcarga->fill([
-                'codigo' => $codigo,
-                'estado' => $request->input('status'),
-            ]);
-            $solicitudcarga->save();
-        }else{
-            $solicitudcarga->fill([
-                'estado' => $request->input('status'),
-            ]);
-            $solicitudcarga->save();
-        }
+        $codigo = Solicitudcarga::generarCodigoSol($request);
+        $salidaInventario = $request->salida_detalle[0]['mvdpt_mvpt_id'];
 
-        if($request->input('carga') !== null){
-        $solicitudcargaId = $solicitudcarga->id;
-        $cargas =  Carga::where('solicitud_cargas', $solicitudcargaId)->get();
-            foreach ($cargas as $carga) {
-                $carga->delete();
-            }
-            //guardar el array de carga
-            foreach ($request->input('carga') as $detail) {
-                $carga = Carga::create([
-                    'codigo_producto'   =>      $detail[0],
-                    'nombre_producto'   =>      $detail[1],
-                    'fecha_produccion'  =>      $detail[2],
-                    'descripcion'       =>      $detail[3],
-                    'lote'              =>      $detail[4],
-                    'cantidad'          =>      $detail[5],
-                    'kilosnetos'        =>      $detail[6],
-                    'librasnetas'       =>      $detail[7],
-                    'solicitud_cargas'  =>      $solicitudcarga->id,
+        $solicitudcarga = Solicitudcarga::find($request->solicitudcarga['id']);
 
-                ]);
+        $solicitudcarga->fill([
+            'codigo' => $codigo,
+            'salida_inventario' => $salidaInventario,
+            'estado' => 1,
+        ]);
+        $solicitudcarga->save();
+        // Obtener las cargas relacionadas
+        $cargas = Carga::where('solicitud_cargas',$request->solicitudcarga['id'])->get();
+
+        // Obtener los detalles de salida de inventario
+        $salida_inventario_detalle = SalidaInventarioDetalle::verSalidaPlanta($salidaInventario);
+        foreach ($cargas as $carga) {
+            foreach ($salida_inventario_detalle as $detalle) {
+
+                if ($carga->lote === $detalle->mvdpt_lote) {
+                    SigaSalidaDetalle::create([
+                        'detalle_id'        => $detalle->mvdpt_id,
+                        'salida_id'         => $detalle->mvdpt_mvpt_id,
+                        'rece_id'           => $detalle->mvdpt_rece_id,
+                        'cantidad_detalle'  => $detalle->mvdpt_cantidad,
+                        'lote_detalle'      => $detalle->mvdpt_lote,
+                        'fecha_elaboracion' => $detalle->mvdpt_fec_elaboracion,
+                        'fecha_vencimiento' => $detalle->mvdpt_fec_vencimiento,
+                        'fecha_envasado'    => $detalle->mvdpt_fec_envasado,
+                        'cargaIngreso_id'   => $carga->id, // Asignar el ID de la carga
+                    ]);
+                }
             }
         }
 
-        return redirect('solicitudcargas');
+        return response()->json('Guardado exitosamente');
     }
 
-    public function destroy(Solicitudcarga $solicitudcarga)
+    public function crearSolicitud($planta_id)//uso
     {
-        $solicitudcarga->delete();
-        return redirect('solicitudcargas');
+        $inventarios = Inventario::productoPlanta($planta_id);
+        $planta = Planta::where('planta_id',$planta_id)->first();
+
+        return Inertia::render('Cargas/Create',[
+            'inventarios'=>$inventarios,
+            'planta' => $planta,
+        ]);
     }
+
+    public function updateAlmacen($id)//uso
+    {
+        $solicitudcarga = Solicitudcarga::find($id);
+
+        if (!$solicitudcarga) {
+            return response()->json(['message' => 'Solicitud no encontrada.'], 404);
+        }
+
+        $codigo = Solicitudcarga::generarCodigoSolAlmacen();
+        $solicitudcarga->fill([
+            'codigo' => $codigo,
+            'estado' => 1,
+        ]);
+
+        $solicitudcarga->save();
+
+        // Retorna una respuesta JSON de éxito
+        return response()->json(['message' => 'Solicitud actualizada exitosamente.'], 200);
+    }
+
+    public function update_costo(Request $request)
+    {
+        // Actualizar las cargas
+        foreach ($request->all() as $cargaData) {
+            $carga = Carga::find($cargaData['id']);
+            $carga->costo_caja = $cargaData['costo_caja'];
+            // Aquí puedes agregar más campos que necesites actualizar
+            $carga->save();
+        }
+
+        return response()->json(['message' => 'Costos actualizados correctamente.'], 200);
+        //return response()->json($request);
+    }
+
+
 }

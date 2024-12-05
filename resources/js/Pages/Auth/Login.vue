@@ -12,9 +12,9 @@
 
         <form @submit.prevent="submit">
             <div>
-                <InputLabel for="email" value="Email" />
-                <TextInput id="email" type="email" class="mt-1 block w-full" v-model="form.email" required autofocus autocomplete="username" />
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputLabel for="email" value="Usuario" />
+                <TextInput id="usr_usuario" type="text" class="mt-1 block w-full" v-model="form.usr_usuario" required autofocus autocomplete="username" />
+                <InputError class="mt-2" :message="form.errors.usr_usuario" />
             </div>
 
             <div class="mt-3">
@@ -58,7 +58,7 @@ defineProps({
 });
 
 const form = useForm({
-    email: '',
+    usr_usuario: '',
     password: '',
     remember: false
 });

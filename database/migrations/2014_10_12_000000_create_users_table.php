@@ -19,12 +19,9 @@ return new class extends Migration
             $table->string('materno');
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password')->default(Hash::make('eba2024'));
             $table->string('celular');
-            $table->foreignId('planta_id');
             $table->string('estado')->default('1');
-            $table->rememberToken();
             $table->timestamps();
         });
     }

@@ -35,9 +35,15 @@ class CargaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Carga $carga)
+    public function show($id)
     {
-        //
+        $verCargaDetalle = Carga::select('siga.producto_terminado_movimiento_detalle.*',
+        'siga.insumo_receta.rece_nombre as rece_nombre')
+        ->join('siga.insumo_receta','siga.insumo_receta.rece_id','=','siga.producto_terminado_movimiento_detalle.mvdpt_rece_id')
+        ->where('mvdpt_mvpt_id',$id)
+        ->where('mvdpt_estado','A')->get();
+
+        return response()->json($salidaInventarioDetalle);
     }
 
     /**

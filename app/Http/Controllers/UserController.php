@@ -12,33 +12,27 @@ class UserController extends Controller
     public function index()
     {
         $usuarios = User::select('users.id','ci','paterno','materno',
-        'name','email','celular','planta_id','rol','users.estado',
-        'plantas.nombre as planta','rols.nombre as role')
-        ->join('plantas','plantas.id','=','users.planta_id')
-        ->join('rols','rols.id','=','users.rol')
+        'users.name','email','celular','users.estado','roles.name as role')
+        ->join('model_has_roles', 'model_has_roles.model_id','=','users.id')
+        ->join('roles', 'roles.id','=','model_has_roles.role_id')
         ->paginate(5);
         return Inertia::render('Users/Index', [
             'users' => $usuarios,
-            'plantas' => Planta::all(),
-            'roles' => Rol::all(),
         ]);
     }
 
     public function store(Request $request)
     {
-        //dd($request);
-        $request->validate([
-            'ci'=>'required',
-            'paterno'=>'required|max:20',
-            'materno'=>'required|max:20',
-            'name'=>'required|max:30',
-            'email'=>'required|max:80',
-            'celular'=>'required',
-            'planta_id'=>'required',
-            'rol'=>'required',
+        $user = User::create([
+            'ci'=> $request->input('ci'),
+            'paterno'=> $request->input('paterno'),
+            'materno'=> $request->input('materno'),
+            'name'=> $request->input('name'),
+            'email'=> $request->input('email'),
+            'celular'=> $request->input('celular'),
         ]);
-        $usuario = new User($request->input());
-        $usuario->save();
+
+        $user->assignRole($request->input('rol'));
         return redirect('users');
     }
 

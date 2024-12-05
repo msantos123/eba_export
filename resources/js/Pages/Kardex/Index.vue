@@ -1,42 +1,14 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DangerButton from '@/Components/DangerButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import Swal from 'sweetalert2';
-import vueTailwindPaginationUmd from '@ocrv/vue-tailwind-pagination';
 
 const props = defineProps({
-    kardex: {
-        type: Object,
-    }
+    kardex: { type: Object }
 });
 
 const form = useForm({
     id:''
 });
-
-const ok = (msj) => {
-    form.reset();
-    Swal.fire({title:msj,icon:'success'});
-}
-
-const ingreso = (id, codigo) =>{
-    const alerta = Swal.mixin({
-        buttonsStyling:true,
-    });
-    alerta.fire({
-        title:'Esta seguro que desea recibir la carga con '+codigo+'?',
-        icon: 'question', showCancelButton:true,
-        confirmButtonText:'<i class="fa-solid fa-check"></i> Si.',
-        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
-    }).then((result)=>{
-        if(result.isConfirmed){
-            form.get(route('conocimientos.ingreso',id),{
-                onSuccess: () => {ok('Carga Recibida')}
-            });
-        }
-    });
-}
 
 </script>
 
@@ -88,7 +60,7 @@ const ingreso = (id, codigo) =>{
                                 <p class="text-gray-900 whitespace-no-wrap">{{ kar.articulo }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ kar.proveedor }}</p>
+                                <p class="text-gray-900 whitespace-no-wrap">{{ kar.plantas_nombre }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">{{ kar.lote }}</p>
@@ -101,8 +73,8 @@ const ingreso = (id, codigo) =>{
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
                                 <Link :href="route('kardexs.show', kar.id)"
-                                :class="'px-4 py-2 bg-yellow-400 text-white border rounded-md font-semibold text-xs'">
-                                <i class="fa-solid fa-chalkboard-user fa-lg" style="color: #ffffff;"></i>
+                                class="inline-block rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-400 text-sm">
+                                <i class="fa-solid fa-eye" style="color: #ffffff;"></i>
                                 </Link>
                             </td>
                         </tr>

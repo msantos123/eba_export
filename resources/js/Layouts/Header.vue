@@ -1,5 +1,8 @@
 <template>
     <header class="flex items-center justify-between border-b-4 border-gray-600 bg-white px-6 py-4">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <div class="flex items-center">
             <button @click="$page.props.showingMobileMenu = !$page.props.showingMobileMenu" class="text-gray-500 focus:outline-none lg:hidden">
                 <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -12,7 +15,7 @@
             <dropdown>
                 <template #trigger>
                     <button @click="dropdownOpen = ! dropdownOpen" class="relative block overflow-hidden">
-                        {{ $page.props.auth.user.name }} {{ $page.props.auth.user.paterno }} {{ $page.props.auth.user.materno }}
+                        {{ $page.props.auth.user.usr_usuario }}
                     </button>
                 </template>
 

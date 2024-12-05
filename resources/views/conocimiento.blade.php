@@ -10,10 +10,10 @@
     }
 
     body {
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    padding: 0 1cm; /* Agrega un espacio de 1 centímetro a los lados */
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        padding: 0 1cm; /* Agrega un espacio de 1 centímetro a los lados */
     }
     .logo-container {
       display: flex;
@@ -76,9 +76,9 @@
     text-align: left;
     }
 
-    .table3 {
+.table3 {
   font-family: 'Calibri', sans-serif;
-  font-size: 12px;
+  font-size: 10px;
   border: 1px solid #333; /* Agregamos el color del borde */
   width: 90%;
   margin: 2 auto;
@@ -95,9 +95,22 @@
   background-color: #e6e6e642;
 }
 
-.table3 td {
-  width: 25%;
+/* Especificar el ancho de las columnas */
+.table3 th:nth-child(1),
+.table3 td:nth-child(1) {
+  width: 5%; /* Ancho para la primera columna */
 }
+
+.table3 th:nth-child(2),
+.table3 td:nth-child(2) {
+  width: 15%; /* Ancho para la segunda columna */
+}
+
+.table3 th:nth-child(3),
+.table3 td:nth-child(3) {
+  width: 50%; /* Ancho más grande para la tercera columna */
+}
+
 .table4 {
     font-family: 'Calibri', sans-serif;
     font-size: 14px;
@@ -138,7 +151,7 @@
         <tr>
             <td>Consignatario: </td>
             <td>Empresa Boliviana de Alimentos y Derivados - EBA<br>
-                Atn: {{ $almacen->name }} {{ $almacen->paterno }} {{ $almacen->materno }} Cel: {{ $almacen->celular }}<br>
+                Atn: Jose Luis Santos Castillo<br>
                 Zona Villa Mercedes E Av. Simon Bolivar #2010<br>
                 Almacen de Exportaciones EL ALTO – LA PAZ<br>
             </td>

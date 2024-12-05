@@ -10,7 +10,6 @@ import Modal from '@/Components/Modal.vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { nextTick, ref } from 'vue';
 import Swal from 'sweetalert2';
-import Pagination from '@/Components/Pagination.vue'
 
 const ci = ref(null);
 const paterno = ref(null);
@@ -26,8 +25,6 @@ const id = ref('');
 
 const props = defineProps({
     users: { type: Object, },
-    plantas: { type: Object, },
-    roles: { type: Object, },
 
 });
 
@@ -38,12 +35,11 @@ const form = useForm({
     name:'',
     email:'',
     celular:'',
-    planta_id:'',
     rol:'',
 });
 
 
-const openModal = (op,ci,paterno,materno,name,email,celular,planta_id,rol,usuario)=>{
+const openModal = (op,ci,paterno,materno,name,email,celular,rol,usuario)=>{
     modal.value = true;
     nextTick(() =>ci.value.focus());
     nextTick(() =>paterno.value.focus());
@@ -51,7 +47,6 @@ const openModal = (op,ci,paterno,materno,name,email,celular,planta_id,rol,usuari
     nextTick(() =>name.value.focus());
     nextTick(() =>email.value.focus());
     nextTick(() =>celular.value.focus());
-    nextTick(() =>planta_id.value.focus());
     nextTick(() =>rol.value.focus());
     operation.value = op;
     id.value = usuario;
@@ -67,7 +62,6 @@ const openModal = (op,ci,paterno,materno,name,email,celular,planta_id,rol,usuari
         form.name=name;
         form.email=email;
         form.celular=celular;
-        form.planta_id=planta_id;
         form.rol=rol;
     }
 }
@@ -154,9 +148,6 @@ const cambiaEstado = (id, ci) =>{
                             Celular
                         </th>
                         <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Planta
-                        </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                             Rol
                         </th>
                         <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
@@ -189,9 +180,6 @@ const cambiaEstado = (id, ci) =>{
                         </td>
                         <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
                             <p class="text-gray-900 whitespace-no-wrap">{{ user.celular }}</p>
-                        </td>
-                        <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.planta }}</p>
                         </td>
                         <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
                             <p class="text-gray-900 whitespace-no-wrap">{{ user.role }}</p>
@@ -255,20 +243,14 @@ const cambiaEstado = (id, ci) =>{
             </div>
             <div class="p-3 flex space-x-4">
                 <div class="w-1/2">
-                    <InputLabel for="planta_id" value="Oficina, Planta o Almacen:"></InputLabel>
-                    <select id="planta_id" v-model="form.planta_id" class="mt-1 block w-full rounded">
-                        <option value="">-- Seleccione una opción --</option>
-                        <option v-for="planta in plantas" :value="planta.id">{{ planta.nombre }}</option>
-                    </select>
-                    <InputError :message="form.errors.planta_id" class="mt-2"></InputError>
-                </div>
-                <div class="w-1/2">
                     <InputLabel for="rol" value="Rol:"></InputLabel>
                     <select id="rol" v-model="form.rol" class="mt-1 block w-full rounded">
                         <option value="">-- Seleccione una opción --</option>
-                        <option v-for="rol in roles" :value="rol.id">{{ rol.nombre }}</option>
+                        <option value="admin">Administrador</option>
+                        <option value="oficina">Oficina Central</option>
+                        <option value="planta">Planta Productora</option>
+                        <option value="almacen">Almacen El Alto</option>
                     </select>
-                    <InputError :message="form.errors.planta_id" class="mt-2"></InputError>
                 </div>
             </div>
 

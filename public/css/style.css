@@ -1,0 +1,20 @@
+@font-face {
+    font-family: 'Simsun';
+    font-style: normal;
+    font-weight: normal;
+    src: url("/fonts/simsun.ttf") format('truetype');
+}
+@font-face {
+    font-family: 'Monotype Corsiva Bold';
+    font-style: normal;
+    font-weight: 900;
+    src: url("/fonts/simsun.ttf") format('truetype');
+}
+h1 {
+    font-family: 'Simsun';
+    font-weight: 900;
+}
+h2 {
+    font-family: 'Simsun';
+    font-weight: normal;
+}

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('observaciones')->nullable();
             $table->foreignId('conocimiento_id');
             $table->integer('estado')->default(0);
+            $table->string('pdf_comprobante_ingreso',100)->nullable();
             $table->timestamps();
         });
     }

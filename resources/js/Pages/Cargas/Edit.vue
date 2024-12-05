@@ -1,90 +1,167 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
-import GreenButton from '@/Components/GreenButton.vue';
 import BlueButton from '@/Components/BlueButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import Modal from '@/Components/Modal.vue';
+import CargaPlanta from '@/Components/CargaPlanta.vue';
+import axios from 'axios';
 import Swal from 'sweetalert2';
-import SecondaryButton from '@/Components/SecondaryButton.vue';
 
 const props = defineProps({
-    solicitudcarga: { type:Object },
-    plantas: { type: Object },
-    productos: { type: Object },
-    cargas: { type: Object },
-    kardexs: { type: Object },
+    cargas: { type: Array },
+    planta_id: { type: String},
+    solicitudcarga: { type: Object },
+    salidaInventario: { type:Object },
 })
 
 const form = useForm({
-    planta_id:props.solicitudcarga.planta_id,
-    status:'',
-    solicitud_id:'',
-    carga:[],
+    planta_id:props.planta_id,
+    salida_inventario:'',
 });
 
-const edit = (index) => {
-    const selectedProducto = {
-    codigo_producto: carga.value[index][0],
-    nombre_producto: carga.value[index][1]
-    };
-    producto.value = selectedProducto;
-    fecha_produccion.value = carga.value[index][2];
-    descripcion.value = carga.value[index][3];
-    lote.value = carga.value[index][4];
-    cantidad.value = carga.value[index][5];
-    carga.value.splice(index, 1);
+const selectedRow = ref(null);
+
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+  return new Date(dateString).toLocaleDateString('es-ES', options);
 };
 
-const fecha_produccion = ref('');
-const descripcion = ref('Cajas de Almendras');
-const lote = ref('');
-const producto = ref('');
-const cantidad = ref('');
-
-const carga = ref(Object.values(props.cargas).map(carga => [
-    carga.codigo_producto,  //0
-    carga.nombre_producto,  //1
-    carga.fecha_produccion, //2
-    carga.descripcion,      //3
-    carga.lote,             //4
-    carga.cantidad,         //5
-    carga.kilosnetos,       //6
-    carga.librasnetas,      //7
-]))
-
-const add = () => {
-    const kilosnetos = cantidad.value * 20;
-    const librasnetas = parseFloat((kilosnetos * 2.20462).toFixed(2));
-    const newData = [
-        producto.value.codigo_producto,
-        producto.value.nombre_producto,
-        fecha_produccion.value,
-        descripcion.value,
-        lote.value,
-        cantidad.value,
-        kilosnetos,
-        librasnetas,
-    ];
-    carga.value.push(newData);
-    descripcion.value = 'Cajas de Almendras';
-    fecha_produccion.value = '';
-    producto.value = '';
-    lote.value='';
-    cantidad.value = '';
-    kilosnetos = kilosnetos;
-    librasnetas= librasnetas;
+const handleCheckboxChange = (sal, isChecked) => {
+  if (isChecked) {
+    selectedRow.value = sal;
+  } else {
+    selectedRow.value = null;
+  }
 };
-form.carga = carga.value;
+//codigo del modal
+const modalPlanta = ref(false);
+const plantaData = ref(null);
 
-const submitForm = (status,solicitudcarga) => {
-    form.status = status;
-    form.put(route('solicitudcargas.update',solicitudcarga), {
-    });
-}
+const openModalPlanta = async (mvpt_id) => {
+    modalPlanta.value = true;
+        try {
+            const response = await axios.get(`/sigaSalidaDetalle/verSalidaPlanta/${mvpt_id}`);
+            plantaData.value = response.data;
+            console.log(plantaData);
+        } catch (error) {
+            console.error('Error al obtener los datos:', error);
+        }
+};
 
+const closeModal = () => {
+    modalPlanta.value = false;
+    form.reset();
+};
+
+const showMessage = ref(false);
+const message = ref('');
+
+
+const submitForm = async () => {
+
+    if (selectedRow.value) {
+        const { salida_detalle, ...rest } = selectedRow.value;
+
+        // Itera sobre los detalles de salida
+        if (salida_detalle && salida_detalle.length > 0) {
+            let allMatch = true;
+
+            salida_detalle.forEach(det => {
+            const { mvdpt_rece_id, mvdpt_lote, total_cantidad } = det;
+
+                // Inicializa las banderas de coincidencia
+                let productMatch = false;
+                let loteMatch = false;
+                let cantidadMatch = false;
+
+                    // Compara con cada item en props.cargas
+                    props.cargas.forEach(item => {
+                    // Verifica el producto
+                    if (item.receta_id === mvdpt_rece_id) {
+                        productMatch = true;
+                    }
+                    // Verifica el lote
+                    if (item.lote === mvdpt_lote) {
+                        loteMatch = true;
+                    }
+                    // Verifica la cantidad
+                    if (Math.round(total_cantidad) === item.cantidad) {
+                        cantidadMatch = true;
+                    }
+                });
+
+                if (!productMatch) {
+                    showMessageWithText('Los productos no coincide con ninguna solicitud de carga.');
+                    allMatch = false;
+                    return false;
+                }
+                if (!loteMatch) {
+                    showMessageWithText(`El lote ${mvdpt_lote} de la Salida de Planta no coincide con ninguna de solicitud de carga.`);
+                    allMatch = false;
+                    return false;
+                }
+                if (!cantidadMatch) {
+                    showMessageWithText(`La cantidad ${total_cantidad} de la Salida de Planta no coincide con ninguna solicitud de carga.`);
+                    allMatch = false;
+                    return false;
+                }
+                // Si todas las comparaciones coinciden
+            if (allMatch) {
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    text: '¿Desea asignar nro. de salida a la solicitud de carga?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, guardar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Preparar los datos a enviar
+                        const dataToSend = {
+                            solicitudcarga: props.solicitudcarga,
+                            salida_detalle: salida_detalle // Incluye los detalles de salida
+                        };
+                        // Realiza la actualización
+                        const form = axios;
+                        form.put(route('solicitudcargas.update', dataToSend))
+                        .then(response => {
+                            console.log('Respuesta del servidor:', response); // Log para ver la respuesta del controlador
+                                Swal.fire({
+                                title: 'Guardado!',
+                                text: 'Los cambios han sido guardados.',
+                                icon: 'success',
+                                willClose: () => {
+                                    // Redirecciona a la página de solicitudes de carga después de que se cierre el modal
+                                    window.location.href = route('solicitudcargas.index');
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error al guardar:', error); // Log para ver el error en caso de fallo
+                            Swal.fire('Error!', 'Ocurrió un error al guardar los cambios.', 'error');
+                        });
+                    }
+                });
+                }
+            });
+        } else {
+            alert('No hay detalles en el registro seleccionado.');
+        }
+    } else {
+        alert('No se ha seleccionado ningún registro.');
+    }
+};
+
+const showMessageWithText = (text) => {
+    message.value = text;
+    showMessage.value = true;
+    setTimeout(() => {
+        showMessage.value = false;
+    }, 5000);
+};
 </script>
 
 <template>
@@ -92,122 +169,122 @@ const submitForm = (status,solicitudcarga) => {
 
     <AuthenticatedLayout>
         <template #header>
-            Actualizar Solicitud de Carga
+            Elejir Salida de Inventario
         </template>
-    <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
-        <div class="px-4 py-3 flex">
-                <div class="mx-1">
-                    <GreenButton :disabled="form.processing" @click.prevent="submitForm(1,solicitudcarga)">
-                    <i class="fa-solid fa-list-check fa-lg" style="color: #ffffff;"></i> Solicitar Aprobación </GreenButton>
+        <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
+            <div class="px-4 py-3 flex">
+                <div class="mx-1" >
+                    <Link :href="route('solicitudcargas.index')"
+                    class="inline-block rounded-md bg-gray-500 px-4 py-2 text-white hover:bg-gray-400 text-sm">
+                    <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
+                    </Link>
                 </div>
                 <div class="mx-1">
-                    <BlueButton :disabled="form.processing" @click.prevent="submitForm(2,solicitudcarga)">
+                    <BlueButton :disabled="form.processing" @click="submitForm()">
                     <i class="fa-solid fa-file-circle-plus fa-lg" style="color: #ffffff;"></i> Aceptar Solicitud de Carga</BlueButton>
                 </div>
+            </div>
+        </div>
+    <div v-if="showMessage" class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-red-200 shadow-md">
+        <div class="px-4 py-3 flex">
+            <div  class="text-red-500">
+                {{ message }}
+            </div>
         </div>
     </div>
     <div class="min-w-full overflow-x-auto rounded-lg shadow">
         <div class="w-full whitespace-no-wrap">
             <div class="border-b bg-gray-50 text-left text-xs tracking-wide text-gray-500">
                 <div class="border-b-2 px-6 py-4 text-left text-xs tracking-wider">
-                    <InputLabel value="Datos de Carga" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
-                    <form @submit.prevent="submitForm">
-                        <div class="grid grid-cols-4 gap-4 mt-4" v-if="$page.props.auth.user.rol == 2">
-                            <div>
-                                <InputLabel for="planta_id" value="Planta de Producción"></InputLabel>
-                                <select id="planta_id" v-model="form.planta_id" class="mt-2 block w-full rounded-md bg-gray-200 text-gray-800"  disabled>
-                                    <option value="">-- Seleccione una opción --</option>
-                                    <option v-for="planta in plantas" :value="planta.id">{{ planta.nombre }}</option>
-                                </select>
-                                <InputError :message="form.errors.planta_id" class="mt-2"></InputError>
-                            </div>
-                            <div>
-                                <InputLabel value="Estado"></InputLabel>
-                                <span v-if="solicitudcarga.estado === 0" class="bg-gray-300 px-2 py-3 rounded-md mt-2 block w-full">Borrador</span>
-                                <span v-else-if="solicitudcarga.estado === 1" class="bg-blue-400 px-2 py-3 rounded-md mt-2 block w-full">Enviado</span>
-                                <span v-else-if="solicitudcarga.estado === 2" class="bg-green-400 px-2 py-3 rounded-md mt-2 block w-full">Recibido</span>
-                            </div>
-                        </div>
-                        <br>
-                            <div class="grid grid-cols-5 gap-1 mt-2">
-                                <div>
-                                    <InputLabel for="producto_id" value="Producto"></InputLabel>
-                                    <select id="planta_id" v-model="producto" class="mt-1 block w-full rounded-md">
-                                        <option value="">-- Seleccione una opción --</option>
-                                        <option v-for="producto in productos"
-                                        :value="{codigo_producto: producto.codigo_producto, nombre_producto: producto.nombre_producto}">
-                                        {{ producto.nombre_producto }}</option>
-                                    </select>
-                                    <InputError :message="form.errors.producto_id" class="mt-2"></InputError>
-                                </div>
-                                <div>
-                                    <InputLabel for="descripcion" value="Fecha Producción" />
-                                    <TextInput id="descripcion" v-model="fecha_produccion" type="date"/>
-                                </div>
-                                <div>
-                                    <InputLabel for="lote" value="Lote" />
-                                    <TextInput type="text" list="lote" placeholder="Ej. LOT-100 EA" v-model="lote"/>
-                                    <datalist id="lote" >
-                                        <option v-for="kardex in kardexs" :value="kardex.lote "> {{ kardex.plantas_nombre }}</option>
-                                    </datalist>
-                                </div>
-                                <div>
-                                    <InputLabel for="cantidad" value="Cantidad"/>
-                                    <TextInput id="cantidad" v-model="cantidad" type="number" placeholder="Ej. 200" />
-                                </div>
-                                <div class="flex items-end">
-                                    <BlueButton type="button" @click="add()"
-                                    class="rounded-md px-4 py-2.5 text-white text-sm block w-full mt-1 block w-full">
-                                    <i class="fa-solid fa-truck-ramp-box px" style="color: #ffffff;"></i>
-                                    Agregar
-                                    </BlueButton>
-                                </div>
-                            </div>
+                    <CargaPlanta :cargas = "cargas" />
+                    <br>
+                    <InputLabel value="Selecionar Nro. Salida de Planta" class="text-lg font-maximo pb-2 border-b border-gray-300"/>
                             <br>
                             <table class="w-full border-collapse font-semibold uppercase">
                                 <thead>
                                     <tr class="bg-gray-200">
-                                        <th class="px-4 py-2">Codigo</th>
-                                        <th class="px-4 py-2">Producto</th>
-                                        <th class="px-4 py-2">Fecha Producción</th>
-                                        <th class="px-4 py-2">Descripción</th>
-                                        <th class="px-4 py-2">Lote</th>
-                                        <th class="px-4 py-2">Cantidad</th>
-                                        <th class="px-4 py-2">Kilos Netos</th>
-                                        <th class="px-4 py-2">Libras Netas</th>
-                                        <th class="px-4 py-2">Acción</th>
+                                        <th class="px-4 py-2">Nro</th>
+                                        <th class="px-4 py-2">Nro. Salida</th>
+                                        <th class="px-4 py-2">Fecha</th>
+                                        <th class="px-4 py-2">Tipo</th>
+                                        <th class="px-4 py-2">Detalle</th>
+                                        <th class="px-4 py-2">Lote - Cantidad</th>
+                                        <th class="px-4 py-2">Tipo Detalle</th>
+                                        <th class="px-4 py-2">Selecionar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(_, index) in carga" :key="index" class="border-b">
-                                    <td class="px-4 py-2"> {{ carga[index][0] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][1] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][2] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][3] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][4] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][5] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][6] }} </td>
-                                    <td class="px-4 py-2"> {{ carga[index][7] }} </td>
-                                    <td class="px-4 py-2">
-                                        <SecondaryButton type="button" @click="edit(index, carga)">
-                                            <i class="fa-solid fa-edit px" style="color: #ffffff;"></i>
-                                        </SecondaryButton>
-                                    </td>
+                                    <tr v-for="sal, i in salidaInventario" :key="sal.mvpt_id"class="border-b">
+                                        <td class="px-4 py-2"> {{ i + 1 }} </td>
+                                        <td class="px-4 py-2"> {{ sal.mvmvpt_nro }} </td>
+                                        <td class="px-4 py-2"> {{ formatDate(sal.created_at) }}  </td>
+                                        <td class="px-4 py-2"> {{ sal.mvmvpt_tipo }} </td>
+                                        <td class="px-4 py-2"> {{ sal.mvmvpt_tipo_det }} </td>
+                                        <td class="px-4 py-2">
+                                            <ul>
+                                                <li v-for="det in sal.salida_detalle">
+                                                {{ det.rece_nombre }} <br>
+                                                Lote: {{ det.mvdpt_lote }}
+                                                Cantidad: {{ det.total_cantidad }}
+                                                <hr>
+                                                </li>
+                                            </ul>
+                                        </td>
+                                        <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                                            <BlueButton @click="openModalPlanta(sal.mvpt_id)">
+                                                <i class="fa-solid fa-eye" style="color: #ffffff;"></i>
+                                            </BlueButton>
+                                        </td>
+                                        <td class="px-4 py-2">
+                                            <input
+                                            type="checkbox"
+                                            :value="sal.mvpt_id"
+                                            :checked="selectedRow && selectedRow.mvpt_id === sal.mvpt_id"
+                                            @change="handleCheckboxChange(sal, $event.target.checked)"
+                                            />
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
-                        <div class="-mx-3 px py-4" >
-                            <div class="mx-3 py-2">
-                                <Link :href="route('solicitudcargas.index')"
-                                :class="'px-4 py-2 bg-gray-400 text-white border rounded-md font-semibold text-xs'">
-                                <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
-                                </Link>
-                            </div>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
     </div>
+    <Modal :show="modalPlanta" @close="closeModal">
+        <div class="min-w-full overflow-x-auto rounded-lg shadow">
+            <div class="w-full whitespace-no-wrap">
+                <div class="border-b bg-gray-50 text-left text-xs tracking-wide text-gray-500">
+                    <div class="border-b-2 px-6 py-4 text-left text-xs tracking-wider"></div>
+                    <h2 class="p-3 text-lg font-medium text-gray-900">Detalle de Salida de Planta</h2>
+                        <div class="p-3">
+                            <table class="min-w-full border-collapse border border-gray-300">
+                                <thead>
+                                    <tr>
+                                        <th class="border border-gray-300 p-2">#</th>
+                                        <th class="border border-gray-300 p-2">Producto</th>
+                                        <th class="border border-gray-300 p-2">Nro. Lote</th>
+                                        <th class="border border-gray-300 p-2">Cantidad</th>
+                                        <th class="border border-gray-300 p-2">Fecha Elaboracion</th>
+                                        <th class="border border-gray-300 p-2">Fecha Envasado</th>
+                                        <th class="border border-gray-300 p-2">Fecha Vencimiento</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(planta, index) in plantaData" :key="index">
+                                        <td class="border border-gray-300 p-2">{{ index + 1 }}</td>
+                                        <td class="border border-gray-300 p-2">{{ planta.rece_nombre }}</td>
+                                        <td class="border border-gray-300 p-2">{{ planta.mvdpt_lote }}</td>
+                                        <td class="border border-gray-300 p-2">{{ planta.mvdpt_cantidad }}</td>
+                                        <td class="border border-gray-300 p-2">{{ planta.mvdpt_fec_elaboracion }}</td>
+                                        <td class="border border-gray-300 p-2">{{ planta.mvdpt_fec_envasado }}</td>
+                                        <td class="border border-gray-300 p-2">{{ planta.mvdpt_fec_vencimiento }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                </div>
+            </div>
+        </div>
+    </Modal>
     </AuthenticatedLayout>
 </template>

@@ -1,37 +1,52 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { nextTick, ref } from 'vue';
 import Swal from 'sweetalert2';
 import WarningButton from '@/Components/WarningButton.vue';
-import Modal from '@/Components/Modal.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
 
 const props = defineProps({
-    solicitudcarga: {
-        type: Object,
-    }
+    solicitudcarga: { type: Object, required: true},
+    plantas: { type: Object, required: true},
 });
 const form = useForm({
     id:''
 });
 
-const deleteSolicitud = (id, fecha) =>{
-    const alerta = Swal.mixin({
-        buttonsStyling:true,
-    });
-    alerta.fire({
-        title:'Esta seguro de eliminar la solictud de carga de fecha '+fecha+ '?',
+const deleteSolicitud = (id, fecha) => {
+    Swal.fire({
+        title: '¿Está seguro de eliminar la solicitud de carga de fecha ' + fecha + '?',
         icon: 'question',
-        showCancelButton:true,
-        confirmButtonText:'<i class="fa-solid fa-check"></i> Si, borrar.',
-        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
-    }).then((result)=>{
-        if(result.isConfirmed){
-            form.delete(route('solicitudcargas.destroy',id));
+        showCancelButton: true,
+        confirmButtonText: 'Si, borrar.',
+        cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await axios.delete(route('solicitudcargas.delete', id));
+
+                // Mostrar mensaje de éxito
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Eliminado',
+                    text: response.data.success,
+                }).then(() => {
+                    // Recargar la página solo después de que el usuario cierre el mensaje de éxito
+                    location.reload();
+                });
+
+                // Opcional: recargar la página para reflejar cambios
+                location.reload();
+            } catch (error) {
+                console.error('Error al eliminar la solicitud:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo eliminar la solicitud. Inténtelo de nuevo más tarde.'
+                });
+            }
         }
     });
-}
+};
 </script>
 
 <template>
@@ -39,20 +54,21 @@ const deleteSolicitud = (id, fecha) =>{
 
     <AuthenticatedLayout>
         <template #header>
-            Solicitudes de Carga
+            Solicitudes de Carga a Planta Industrial
         </template>
-
-            <div v-if ="$page.props.user.permissions.includes('create solicitud')" class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
-                <div class="px-4 py-2">
-                    <div class="mx-1" >
-                        <Link :href="route('solicitudcargas.create')"
+            <div v-if ="$page.props.user.permissions.includes('create solicitud')"
+            class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md">
+                <div class="px-4 py-3 flex">
+                    <div class="mx-1" v-for="planta in props.plantas" :key="planta.planta_id">
+                        <div >
+                            <Link :href="route('solicitudcargas.crearSolicitud', planta.planta_id)"
                             class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
-                            <i class="fa-solid fa-clipboard-list px-1" style="color: #ffffff;"></i> Crear Solicitud de Carga
-                        </Link>
+                            <i class="fa-solid fa-industry" style="color: #ffffff;"></i> {{ planta.nombre }}
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
-
             <div class="min-w-full overflow-x-auto rounded-lg shadow">
                 <table class="w-full whitespace-no-wrap">
                     <thead>
@@ -82,13 +98,16 @@ const deleteSolicitud = (id, fecha) =>{
                                 Total Libras Netas
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                Lotes
+                            </th>
+                            <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Estado
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                  Ver
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                 Editar
+                                 Select
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Eliminar
@@ -122,10 +141,14 @@ const deleteSolicitud = (id, fecha) =>{
                                 {{ sol.total_librasnetas }}
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <span v-if="sol.estado === 0" class="bg-gray-300 px-2 py-1 rounded-md">Enviado</span>
-                                <span v-else-if="sol.estado === 1" class="bg-yellow-400 px-2 py-1 rounded-md">Modificado</span>
-                                <span v-else-if="sol.estado === 2" class="bg-blue-400 px-2 py-1 rounded-md">Aceptado</span>
-                                <span v-else-if="sol.estado === 3" class="bg-green-400 px-2 py-1 rounded-md">Terminado</span>
+                                <p v-for="detalle in sol.lista_lotes" :key="detalle.id">
+                                    - {{ detalle.lote }}
+                                </p>
+                            </td>
+                            <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                                <span v-if="sol.estado === 0" class="bg-green-400 px-2 py-1 rounded-md">Enviado</span>
+                                <span v-else-if="sol.estado === 1" class="bg-yellow-400 px-2 py-1 rounded-md">Recibido</span>
+                                <span v-else-if="sol.estado === 2" class="bg-blue-400 px-2 py-1 rounded-md">Terminado</span>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
                                 <Link
@@ -136,9 +159,9 @@ const deleteSolicitud = (id, fecha) =>{
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
                                 <Link v-if ="$page.props.user.permissions.includes('update solicitud') && sol.estado === 0"
-                                :href="route('solicitudcargas.edit', sol.id)"
+                                :href="route('solicitudcargas.edit', [ sol.id, sol.planta_id])"
                                 class="inline-block rounded-md bg-yellow-400 px-4 py-2 text-white hover:bg-yellow-300 text-sm">
-                                <i class="fa-solid fa-chalkboard-user fa-lg" style="color: #ffffff;"></i>
+                                <i class="fa-regular fa-square-check fa-lg" style="color: #ffffff;"></i>
                                 </Link>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">

@@ -1,9 +1,8 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import DangerButton from '@/Components/DangerButton.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import Swal from 'sweetalert2';
-import vueTailwindPaginationUmd from '@ocrv/vue-tailwind-pagination';
+import { ref, defineProps } from 'vue';
+import axios from 'axios';
 
 const props = defineProps({
     conocimientos: {
@@ -15,34 +14,12 @@ const form = useForm({
     id:''
 });
 
-const ok = (msj) => {
-    form.reset();
-    Swal.fire({title:msj,icon:'success'});
-}
 
-const ingreso = (id, codigo) =>{
-    const alerta = Swal.mixin({
-        buttonsStyling:true,
-    });
-    alerta.fire({
-        title:'Esta seguro que desea recibir la carga con '+codigo+'?',
-        icon: 'question', showCancelButton:true,
-        confirmButtonText:'<i class="fa-solid fa-check"></i> Si.',
-        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
-    }).then((result)=>{
-        if(result.isConfirmed){
-            form.get(route('comprobante_ingreso.show',id),{
-                onSuccess: () => {ok('Carga Recibida')}
-            });
-        }
-    });
-}
 
 </script>
 
 <template>
     <Head title="Conocimientos" />
-
     <AuthenticatedLayout>
         <template #header>
             Conocimientos de Carga
@@ -70,13 +47,13 @@ const ingreso = (id, codigo) =>{
                                 Vehiculo
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                                Placa
-                            </th>
-                            <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Celular
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Estado
+                            </th>
+                            <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                Firmado
                             </th>
                             <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                                 Ver
@@ -110,16 +87,18 @@ const ingreso = (id, codigo) =>{
                                 <p class="text-gray-900 whitespace-no-wrap">{{ con.vehiculo }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                                <p class="text-gray-900 whitespace-no-wrap">{{ con.placa }}</p>
-                            </td>
-                            <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">{{ con.celular }}</p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">
                                 <span v-if="con.estado === 0" class="bg-gray-300 px-2 py-1 rounded-md">Borrador</span>
-                                <span v-else-if="con.estado === 1" class="bg-blue-400 px-2 py-1 rounded-md">Enviado</span>
-                                <span v-else-if="con.estado === 2" class="bg-green-400 px-2 py-1 rounded-md">Recibido</span></p>
+                                <span v-else-if="con.estado === 1" class="bg-green-400 px-2 py-1 rounded-md">Enviado</span>
+                                <span v-else-if="con.estado === 2" class="bg-blue-400 px-2 py-1 rounded-md">Recibido</span></p>
+                            </td>
+                            <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">
+                                <span v-if="con.pdf_conocimiento === null" class="bg-red-400 px-2 py-1 rounded-md">No</span>
+                                <span v-else-if="con.pdf_conocimiento !== null" class="bg-green-400 px-2 py-1 rounded-md">Si</span></p>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
                                 <Link
@@ -136,7 +115,8 @@ const ingreso = (id, codigo) =>{
                                 </Link>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
-                                    <a v-if ="$page.props.user.permissions.includes('pdf conocimiento') && con.estado === 1" :href="route('conocimientos.pdf', con.id)" target="_blank"
+                                    <a v-if ="$page.props.user.permissions.includes('pdf conocimiento')"
+                                    :href="route('conocimientos.pdf', con.id)" target="_blank"
                                     class="inline-block rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-400 text-sm">
                                     <i class="fa-regular fa-file-pdf fa-lg" style="color: #ffffff;"></i></a>
                             </td>

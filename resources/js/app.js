@@ -5,6 +5,12 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import 'quill/dist/quill.snow.css'; // Importar los estilos de Quill
+import Quill from 'quill'; // Importar Quill si necesitas acceder a su API
+
+
+// Hacer Quill accesible globalmente (opcional)
+//app.config.globalProperties.$quill = Quill;
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
