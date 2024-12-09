@@ -16,21 +16,8 @@ const props = defineProps({
 
 
 const costosLogisticos = ref([
-    { nombre: 'Certificado Forestal ABT',                   monto_caja: 0.1750, monto_kg: 0.0088, monto_lb: 0.0040},
-    { nombre: 'Asistencia Tecnica ABT',                     monto_caja: 0.1250, monto_kg: 0.0063, monto_lb: 0.0028},
-    { nombre: 'Certificado de Origen',                      monto_caja: 0.0900, monto_kg: 0.0045, monto_lb: 0.0020},
-    { nombre: 'Emision de Certificado de Origen',           monto_caja: 0.6350, monto_kg: 0.0318, monto_lb: 0.0144},
-    { nombre: 'Gate Out (retiro de unidades)',              monto_caja: 0.8125, monto_kg: 0.0406, monto_lb: 0.0185},
-    { nombre: 'Cargos Maritimos FOB',                       monto_caja: 3.4850, monto_kg: 0.1743, monto_lb: 0.0792},
-    { nombre: 'Agente Portuario',                           monto_caja: 1.2180, monto_kg: 0.0609, monto_lb: 0.0277},
-    { nombre: 'Transporte Internacional La Paz - Arica',    monto_caja: 12.6150, monto_kg: 0.6308, monto_lb: 0.2867},
-    { nombre: 'Transporte Nacional Pando a La Paz',         monto_caja: 24.0000, monto_kg: 1.2000, monto_lb: 0.5455},
-    { nombre: 'Envio de documentos (Internacional)',        monto_caja: 1.0000, monto_kg: 0.0500, monto_lb: 0.0227},
-    { nombre: 'Certificados SENASAG',                       monto_caja: 0.6250, monto_kg: 0.0313, monto_lb: 0.0142},
-    { nombre: 'Envio de documentos (Nacional)',             monto_caja: 0.0313, monto_kg: 0.0016, monto_lb: 0.0007},
-    { nombre: 'Papel adhesivo',                             monto_caja: 0.1188, monto_kg: 0.0059, monto_lb: 0.0027},
-    { nombre: 'Red de seguridad',                           monto_caja: 0.3750, monto_kg: 0.0188, monto_lb: 0.0085},
-    { nombre: 'Soga',                                       monto_caja: 0.0375, monto_kg: 0.0019, monto_lb: 0.0009},
+    { nombre: 'Costos Exportación', monto_caja: 38.976, monto_kg: 1.95, monto_lb: 4.28},
+    { nombre: 'Costos Comerciales', monto_caja: 0.04, monto_kg: 0.02, monto_lb: 0.044},
 ]);
 
 const modal = ref(false);
@@ -118,20 +105,18 @@ const handleClick = (monto) => {
 };
 
 const costoAcopio = ref([
-  { id: 1, value: 170, monto: 704.67 },
-  { id: 2, value: 180, monto: 715.59 },
-  { id: 3, value: 190, monto: 724.67 },
-  { id: 4, value: 200, monto: 735.59 },
-  { id: 5, value: 210, monto: 745.59 },
-  { id: 6, value: 220, monto: 755.59 },
-  { id: 7, value: 230, monto: 765.59 },
-  { id: 8, value: 240, monto: 775.59 },
-  { id: 9, value: 250, monto: 785.59 },
-  { id: 10, value: 260, monto: 795.59 },
-  { id: 11, value: 270, monto: 805.59 },
-  { id: 12, value: 280, monto: 815.59 },
-  { id: 13, value: 290, monto: 825.59 },
-  { id: 14, value: 300, monto: 835.59 },
+  { id: 1, value: 250, monto: 785.59 },
+  { id: 2, value: 260, monto: 795.59 },
+  { id: 3, value: 270, monto: 805.59 },
+  { id: 4, value: 280, monto: 815.59 },
+  { id: 5, value: 290, monto: 825.59 },
+  { id: 6, value: 300, monto: 835.59 },
+  { id: 7, value: 310, monto: 837.92 },
+  { id: 8, value: 320, monto: 847.92 },
+  { id: 9, value: 330, monto: 837.92 },
+  { id: 10, value: 340, monto: 867.92 },
+  { id: 11, value: 350, monto: 877.92 },
+  { id: 12, value: 360, monto: 887.92 },
 ]);
 </script>
 <template>
@@ -170,14 +155,14 @@ const costoAcopio = ref([
                     </div>
             </div>
         </div>
-        <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md">
-            <div class="px-4 py-3 flex">
-                <div v-for="item in costoAcopio" :key="item.id" class="mr-2">
+        <div class="mb-4 w-full overflow-hidden rounded-lg bg-white shadow-md">
+            <div class="px-4 py-3 flex flex-wrap justify-between">
+                <div v-for="item in costoAcopio" :key="item.id" class="mr-2 mb-2">
                     <GreenButton @click="handleClick(item.monto)"
-                    class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
-                    {{ item.value }}
+                        class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
+                        {{ item.value }}
                     </GreenButton>
-                    </div>
+                </div>
             </div>
         </div>
         <div class="min-w-full overflow-x-auto rounded-lg shadow">
@@ -360,9 +345,9 @@ const costoAcopio = ref([
                                 <thead>
                                     <tr>
                                         <th class="border border-gray-300 p-2">Nombre Costo</th>
-                                        <th class="border border-gray-300 p-2">Costo Caja</th>
-                                        <th class="border border-gray-300 p-2">Costo Kg</th>
-                                        <th class="border border-gray-300 p-2">Costo Lb</th>
+                                        <th class="border border-gray-300 p-2">Costo Caja (Bs.)</th>
+                                        <th class="border border-gray-300 p-2">Costo Kg (Bs.)</th>
+                                        <th class="border border-gray-300 p-2">Costo Lb (Bs.)</th>
                                         <th class="border border-gray-300 p-2">Accion</th>
                                     </tr>
                                 </thead>
