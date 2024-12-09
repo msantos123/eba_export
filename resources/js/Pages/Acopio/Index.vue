@@ -16,7 +16,7 @@ const props = defineProps({
 
 
 const costosLogisticos = ref([
-    { nombre: 'Costos Exportación', monto_caja: 38.976, monto_kg: 1.95, monto_lb: 4.28},
+    { nombre: 'Costos Exportación', monto_caja: 44.2, monto_kg: 2.21, monto_lb: 4.862},
     { nombre: 'Costos Comerciales', monto_caja: 0.04, monto_kg: 0.02, monto_lb: 0.044},
 ]);
 

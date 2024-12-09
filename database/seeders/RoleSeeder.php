@@ -22,8 +22,6 @@ class RoleSeeder extends Seeder
         //producto terminado
         $permission_producto_terminado = Permission::create(['name' => 'layout productoterminado']);
         //cargas
-        $permission_cargas = Permission::create(['name' => 'layout cargas']);
-
         $permission_layout_sistemas = Permission::create(['name' => 'layout sistemas']);
         $permission_layout_cargas = Permission::create(['name' => 'layout cargas']);
         $permission_layout_inventarios = Permission::create(['name' => 'layout inventarios']);

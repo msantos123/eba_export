@@ -51,8 +51,6 @@ const add = () => {
     descripcion.value = 'Cajas de Almendras';
     selectedInventario.value = '';
     cantidadSolicitada.value = '';
-    kilosnetos = kilosnetos;
-    librasnetas= librasnetas;
 }
 
 };
