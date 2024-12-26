@@ -68,6 +68,7 @@ class SolicitudcargaController extends Controller
         $solicitudcarga = Solicitudcarga::find($id);
         $cargas = Carga::where('solicitud_cargas',$id)->get();
         $salidaInventario = SalidaInventario::indexSalidaInventario($planta_id);
+
         return Inertia::render('Cargas/Edit', [
             'cargas' => $cargas,
             'planta_id' =>$planta_id,
@@ -78,42 +79,43 @@ class SolicitudcargaController extends Controller
 
     public function update(Request $request)//uso
     {
-        $codigo = Solicitudcarga::generarCodigoSol($request);
-        $salidaInventario = $request->salida_detalle[0]['mvdpt_mvpt_id'];
+        try {
+            $codigo = Solicitudcarga::generarCodigoSol($request);
+            $salidaInventario = $request->salida_detalle[0]['mvdpt_mvpt_id'];
 
-        $solicitudcarga = Solicitudcarga::find($request->solicitudcarga['id']);
+            $solicitudcarga = Solicitudcarga::find($request->solicitudcarga['id']);
+            $solicitudcarga->fill([
+                'codigo' => $codigo,
+                'salida_inventario' => $salidaInventario,
+                'estado' => 1,
+            ]);
+            $solicitudcarga->save();
 
-        $solicitudcarga->fill([
-            'codigo' => $codigo,
-            'salida_inventario' => $salidaInventario,
-            'estado' => 1,
-        ]);
-        $solicitudcarga->save();
-        // Obtener las cargas relacionadas
-        $cargas = Carga::where('solicitud_cargas',$request->solicitudcarga['id'])->get();
-
-        // Obtener los detalles de salida de inventario
-        $salida_inventario_detalle = SalidaInventarioDetalle::verSalidaPlanta($salidaInventario);
-        foreach ($cargas as $carga) {
-            foreach ($salida_inventario_detalle as $detalle) {
-
-                if ($carga->lote === $detalle->mvdpt_lote) {
+            // Obtener las cargas relacionadas
+            $cargas = Carga::where('solicitud_cargas', $request->solicitudcarga['id'])->get();
+            // Obtener los detalles de salida de inventario
+            $salida_inventario_detalle = SalidaInventarioDetalle::verSalidaPlanta($salidaInventario);
+            foreach ($cargas as $carga) {
+                foreach ($salida_inventario_detalle as $detalle) {
                     SigaSalidaDetalle::create([
                         'detalle_id'        => $detalle->mvdpt_id,
                         'salida_id'         => $detalle->mvdpt_mvpt_id,
                         'rece_id'           => $detalle->mvdpt_rece_id,
                         'cantidad_detalle'  => $detalle->mvdpt_cantidad,
-                        'lote_detalle'      => $detalle->mvdpt_lote,
+                        'lote_detalle'      => $carga->lote,
                         'fecha_elaboracion' => $detalle->mvdpt_fec_elaboracion,
                         'fecha_vencimiento' => $detalle->mvdpt_fec_vencimiento,
                         'fecha_envasado'    => $detalle->mvdpt_fec_envasado,
-                        'cargaIngreso_id'   => $carga->id, // Asignar el ID de la carga
+                        'cargaIngreso_id'   => $carga->id,
                     ]);
                 }
             }
-        }
 
-        return response()->json('Guardado exitosamente');
+            return response()->json('Guardado exitosamente');
+        } catch (\Exception $e) {
+            // Manejo de errores
+            return response()->json('No se guardó: ' . $e->getMessage(), 500);
+        }
     }
 
     public function crearSolicitud($planta_id)//uso

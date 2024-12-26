@@ -5,18 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Rol extends Model
+class Permiso extends Model
 {
     use HasFactory;
-    protected $table = 'export.roles';
+    protected $table = 'export.permissions';
     protected $fillable = [
         'id',
         'name',
         'guard_name',
     ];
-
-    public function permissions()
-    {
-        return $this->belongsToMany(Permiso::class, 'role_has_permissions', 'role_id', 'permission_id');
-    }
 }

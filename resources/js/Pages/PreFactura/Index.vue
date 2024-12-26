@@ -1,6 +1,9 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, defineProps, computed } from 'vue';
+import TextInput from '@/Components/TextInput.vue';
+import BlueButton from '@/Components/BlueButton.vue';
 
 const props = defineProps({
     pre_factura: {
@@ -12,6 +15,45 @@ const form = useForm({
     id:''
 });
 
+//buscador
+const searchQuery = ref('');
+const normalizeString = (str) => str.toString().toLowerCase().trim();
+const filtered = computed(() => {
+
+    return props.pre_factura.filter(com => {
+        return (
+            normalizeString(com.id).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(com.nro_factura).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(com.fecha_factura).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(com.razon_social).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(com.lugar_destino).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(com.zafra).includes(normalizeString(searchQuery.value))
+        );
+
+    });
+
+});
+
+//paginacion
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+// Propiedad computada para paginar
+const paginated = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    return filtered.value.slice(start, start + itemsPerPage.value);
+});
+
+// Calcular el total de páginas
+const totalPages = computed(() => {
+    return Math.ceil(filtered.value.length / itemsPerPage.value);
+});
+
+// Navegación de páginas
+const goToPage = (page) => {
+    if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 </script>
 
 <template>
@@ -21,6 +63,13 @@ const form = useForm({
         <template #header>
             Pre Factura
         </template>
+
+        <TextInput
+            type="text"
+            v-model="searchQuery"
+            placeholder="Buscar por nro. factura, fecha factura, razon social, lugar destino, zafra..."
+            class="border rounded p-2 mb-4"
+            />
             <div class="min-w-full overflow-x-auto rounded-lg shadow">
                 <table class="w-full whitespace-no-wrap">
                     <thead>
@@ -52,7 +101,7 @@ const form = useForm({
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="pre, i in pre_factura" :key="pre.id">
+                        <tr v-for="pre, i in paginated" :key="pre.id">
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">{{ pre.id }}</p>
                             </td>
@@ -86,6 +135,25 @@ const form = useForm({
                         </tr>
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                    <BlueButton
+                        @click="goToPage(currentPage - 1)"
+                        :disabled="currentPage === 1"
+                        class="px-4 py-2"
+                    >
+                        Anterior
+                    </BlueButton>
+                    <span class="mx-2 py-2">
+                        Página {{ currentPage }} de {{ totalPages }}
+                    </span>
+                    <BlueButton
+                        @click="goToPage(currentPage + 1)"
+                        :disabled="currentPage === totalPages.value"
+                        class="px-4 py-2 "
+                    >
+                        Siguiente
+                    </BlueButton>
+                </div>
             </div>
     </AuthenticatedLayout>
 </template>

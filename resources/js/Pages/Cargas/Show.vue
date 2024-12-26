@@ -39,7 +39,7 @@ const CreateConocimiento = (solicitudcarga) => {
                 </div>
                 <div class="mx-1">
                     <GreenButton @click.prevent="CreateConocimiento(solicitudcarga)"
-                    v-if ="$page.props.user.permissions.includes('create conocimiento') && props.solicitudcarga.estado === 1">
+                    v-if ="$page.props.user.permissions.includes('Crear Conocimiento Carga') && props.solicitudcarga.estado === 1">
                         <i class="fa-solid fa-circle-check fa-lg" style="color: #ffffff;"></i> Realizar Conocimiento de Carga </GreenButton>
                 </div>
             </div>

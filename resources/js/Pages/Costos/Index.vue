@@ -148,7 +148,7 @@ const saveCosto = () => {
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-1 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">
-                                    <GreenButton v-if="kar.costo_caja === null" @click="openModal(kar, 'Planta Industrial Riberalta')"
+                                    <GreenButton v-if ="$page.props.user.permissions.includes('Agregar Costo Lote') && kar.costo_caja === null" @click="openModal(kar, 'Planta Industrial Riberalta')"
                                     class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
                                     <i class="fa-solid fa-coins" style="color: #ffffff;"></i>
                                     </GreenButton>
@@ -185,7 +185,7 @@ const saveCosto = () => {
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-1 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">
-                                    <GreenButton v-if="kar.costo_caja === null" @click="openModal(kar, 'Planta Industrial Sena')"
+                                    <GreenButton v-if ="$page.props.user.permissions.includes('Agregar Costo Lote') && kar.costo_caja === null" @click="openModal(kar, 'Planta Industrial Sena')"
                                     class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
                                     <i class="fa-solid fa-coins" style="color: #ffffff;"></i>
                                     </GreenButton>
@@ -222,7 +222,7 @@ const saveCosto = () => {
                             </td>
                             <td class="border-b border-gray-200 bg-white px-3 py-1 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">
-                                    <GreenButton v-if="kar.costo_caja === null" @click="openModal(kar, 'Planta Industrial Cobija')"
+                                    <GreenButton v-if ="$page.props.user.permissions.includes('Agregar Costo Lote') && kar.costo_caja === null" @click="openModal(kar, 'Planta Industrial Cobija')"
                                     class="inline-block rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-500 text-sm">
                                     <i class="fa-solid fa-coins" style="color: #ffffff;"></i>
                                     </GreenButton>

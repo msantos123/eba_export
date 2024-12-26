@@ -1,12 +1,51 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
+import { ref, defineProps, computed } from 'vue';
+import TextInput from '@/Components/TextInput.vue';
+import BlueButton from '@/Components/BlueButton.vue';
 
 const props = defineProps({
     liberaciones: {
         type: Array,
     }
 });
+
+//buscador
+const searchQuery = ref('');
+const normalizeString = (str) => str.toString().toLowerCase().trim();
+const filtered = computed(() => {
+
+    return props.liberaciones.filter(com => {
+        return (
+            normalizeString(com.libe_factura).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(com.created_at).includes(normalizeString(searchQuery.value))
+        );
+
+    });
+
+});
+
+//paginacion
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+// Propiedad computada para paginar
+const paginated = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    return filtered.value.slice(start, start + itemsPerPage.value);
+});
+
+// Calcular el total de páginas
+const totalPages = computed(() => {
+    return Math.ceil(filtered.value.length / itemsPerPage.value);
+});
+
+// Navegación de páginas
+const goToPage = (page) => {
+    if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 </script>
 
 <template>
@@ -15,6 +54,14 @@ const props = defineProps({
         <template #header>
             Liberacion de Contenedor
         </template>
+
+        <TextInput
+            type="text"
+            v-model="searchQuery"
+            placeholder="Buscar por nro. factura, fecha de creacion..."
+            class="border rounded p-2 mb-4"
+            />
+
             <div class="min-w-full overflow-x-auto rounded-lg shadow">
                 <table class="w-full whitespace-no-wrap">
                     <thead>
@@ -40,7 +87,7 @@ const props = defineProps({
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="lib, i in liberaciones" :key="lib.id">
+                        <tr v-for="lib, i in paginated" :key="lib.id">
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">{{ (i+1) }}</p>
                             </td>
@@ -73,6 +120,25 @@ const props = defineProps({
                         </tr>
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                    <BlueButton
+                        @click="goToPage(currentPage - 1)"
+                        :disabled="currentPage === 1"
+                        class="px-4 py-2"
+                    >
+                        Anterior
+                    </BlueButton>
+                    <span class="mx-2 py-2">
+                        Página {{ currentPage }} de {{ totalPages }}
+                    </span>
+                    <BlueButton
+                        @click="goToPage(currentPage + 1)"
+                        :disabled="currentPage === totalPages.value"
+                        class="px-4 py-2 "
+                    >
+                        Siguiente
+                    </BlueButton>
+                </div>
             </div>
     </AuthenticatedLayout>
 </template>

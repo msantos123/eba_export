@@ -17,7 +17,8 @@
                 </template>
                 Inicio
             </nav-link>
-            <nav-link :href="route('inventario.index')" :active="route().current('inventario.index')">
+            <nav-link :href="route('inventario.index')" :active="route().current('inventario.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Plantas')">
                 <template #icon>
                     <i class="fa-solid fa-warehouse fa-lg" style="color: #ffffff;"></i>
                 </template>
@@ -25,7 +26,7 @@
             </nav-link>
             <!--NAVEGADOR SISTEMA-->
             <a class="flex items-center mt-4 py-2 px-6 text-gray-100" @click="showSistema = !showSistema"
-            v-if ="$page.props.user.permissions.includes('layout sistemas')">
+            v-if ="$page.props.user.permissions.includes('Modulo Sistemas')">
                 <i class="fa-solid fa-address-card fa-lg" style="color: #ffffff;"></i>
                 <span class="mx-3">Sistema</span>
             </a>
@@ -41,6 +42,9 @@
                             <Link class="w-full" :href="route('users.index')">Usuarios</Link>
                         </li>
                         <li class="px-2 py-1 transition-colors duration-150">
+                            <Link class="w-full" :href="route('roles.index')">Roles</Link>
+                        </li>
+                        <li class="px-2 py-1 transition-colors duration-150">
                             <Link class="w-full" :href="route('plantas.index')">Plantas y Almacenes</Link>
                         </li>
                     </ul>
@@ -48,7 +52,7 @@
             </transition>
 
             <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showCarga = !showCarga"
-            v-if ="$page.props.user.permissions.includes('layout cargas')">
+            v-if ="$page.props.user.permissions.includes('Modulo Cargas')">
                 <i class="fa-solid fa-truck fa-lg" style="color: #ffffff;"></i>
                 <span class="mx-3">Cargas</span>
             </a>
@@ -61,18 +65,19 @@
                     <ul class="overflow-hidden p-2 mx-4 mt-2 space-y-2 text-sm font-medium text-white bg-gray-700 bg-opacity-50 rounded-md shadow-inner"
                         aria-label="submenu">
                         <li class="px-2 py-1 transition-colors duration-150"
-                        v-if ="$page.props.user.permissions.includes('layout solicitudcarga')">
-                            <Link class="w-full" :href="route('solicitudcargas.index')">Solicitud de Carga</Link>
+                        v-if ="$page.props.user.permissions.includes('Sub Modulo Cargas Solicitud Planta')">
+                            <Link class="w-full" :href="route('solicitudcargas.index')">Solicitud Planta Industrial</Link>
                         </li>
                         <li class="px-2 py-1 transition-colors duration-150"
-                        v-if ="$page.props.user.permissions.includes('layout conocimientos')">
+                        v-if ="$page.props.user.permissions.includes('Sub Modulo Cargas Conocimiento')">
                             <Link class="w-full" :href="route('conocimientos.index')">Conocimiento de Carga</Link>
                         </li>
                     </ul>
                 </div>
             </transition>
 
-            <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showInventario = !showInventario">
+            <a class="flex items-center mt-4 py-2 px-6 text-gray-100" href="#" @click="showInventario = !showInventario"
+            v-if ="$page.props.user.permissions.includes('Modulo Almacenes')">
                 <i class="fa-solid fa-warehouse fa-lg" style="color: #ffffff;"></i>
                 <span class="mx-3">Almacen El Alto</span>
             </a>
@@ -84,73 +89,83 @@
                 <div v-show="showInventario">
                     <ul class="overflow-hidden p-2 mx-4 mt-2 space-y-2 text-sm font-medium text-white bg-gray-700 bg-opacity-50 rounded-md shadow-inner"
                         aria-label="submenu">
-                        <li class="px-2 py-1 transition-colors duration-150">
+                        <li class="px-2 py-1 transition-colors duration-150"
+                        v-if ="$page.props.user.permissions.includes('Sub Modulo Almacen Solicitud Almacen')">
                             <Link class="w-full" :href="route('solicitudAlmacen.index')">Solicitud Almacenes</Link>
                         </li>
                         <li class="px-2 py-1 transition-colors duration-150"
-                        v-if ="$page.props.user.permissions.includes('layout ingreso')">
+                        v-if ="$page.props.user.permissions.includes('Sub Modulo Almacen Ingreso Almacen')">
                             <Link class="w-full" :href="route('comprobante_ingreso.index')">Ingreso Almacenes</Link>
                         </li>
                         <li class="px-2 py-1 transition-colors duration-150"
-                        v-if ="$page.props.user.permissions.includes('layout salida')">
+                        v-if ="$page.props.user.permissions.includes('Sub Modulo Almacen Kardex')">
                             <Link class="w-full" :href="route('kardexs.index')">Kardex</Link>
                         </li>
                         <li class="px-2 py-1 transition-colors duration-150"
-                        v-if ="$page.props.user.permissions.includes('layout kardex')">
+                        v-if ="$page.props.user.permissions.includes('Sub Modulo Almacen Salida Almacen')">
                             <Link class="w-full" :href="route('comprobante_salida.index')">Salida Almacenes</Link>
                         </li>
                     </ul>
                 </div>
             </transition>
-            <nav-link :href="route('etiquetas.index')" :active="route().current('etiquetas.index')">
+            <nav-link :href="route('etiquetas.index')" :active="route().current('etiquetas.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Etiquetas')">
                 <template #icon>
                     <i class="fa-solid fa-tags fa-lg" style="color: #ffffff;"></i>
                 </template>
                 Etiquetas
             </nav-link>
-            <nav-link :href="route('tracking.index')" :active="route().current('tracking.index')">
+            <nav-link :href="route('tracking.index')" :active="route().current('tracking.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Tracking')">
                 <template #icon>
                     <i class="fa-solid fa-location-dot fa-lg"></i>
                 </template>
                 Tracking
             </nav-link>
-            <nav-link :href="route('contratos.index')" :active="route().current('contratos.index')">
+            <nav-link :href="route('contratos.index')" :active="route().current('contratos.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Contratos')">
                 <template #icon>
                     <i class="fa-solid fa-file-signature fa-lg"></i>
                 </template>
                 Contratos
             </nav-link>
-            <nav-link :href="route('costos.index')" :active="route().current('costos.index')">
+            <nav-link :href="route('costos.index')" :active="route().current('costos.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Costos')">
                 <template #icon>
                     <i class="fa-solid fa-coins fa-lg" style="color: #ffffff;"></i>
                 </template>
                 Costos
             </nav-link>
-            <nav-link :href="route('acopio.index')" :active="route().current('acopio.index')">
+            <nav-link :href="route('acopio.index')" :active="route().current('acopio.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Planificacion')">
                 <template #icon>
                     <i class="fa-solid fa-tree fa-lg" style="color: #ffffff;"></i>
                 </template>
                 Planificacion
             </nav-link>
-            <nav-link :href="route('poa.index')" :active="route().current('poa.index')">
+            <nav-link :href="route('poa.index')" :active="route().current('poa.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Poa')">
                 <template #icon>
                     <i class="fa-regular fa-file-powerpoint fa-lg" style="color: #ffffff;"></i>
                 </template>
                 POA
             </nav-link>
-            <nav-link :href="route('liberacion.index')" :active="route().current('liberacion.index')">
+            <nav-link :href="route('liberacion.index')" :active="route().current('liberacion.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Liberacion')">
                 <template #icon>
                     <i class="fa-solid fa-check-to-slot fa-lg"></i>
                 </template>
                 Liberación
             </nav-link>
-            <nav-link :href="route('pre_factura.index')" :active="route().current('pre_factura.index')">
+            <nav-link :href="route('pre_factura.index')" :active="route().current('pre_factura.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Pre Factura')">
                 <template #icon>
                     <i class="fa-solid fa-file-invoice-dollar fa-lg" style="color: #ffffff;"></i>
                 </template>
                 Pre Factura
             </nav-link>
-            <nav-link :href="route('estadistica.index')" :active="route().current('estadistica.index')">
+            <nav-link :href="route('estadistica.index')" :active="route().current('estadistica.index')"
+            v-if ="$page.props.user.permissions.includes('Modulo Estadistica')">
                 <template #icon>
                     <i class="fa-solid fa-chart-line fa-lg" style="color: #ffffff;"></i>
                 </template>

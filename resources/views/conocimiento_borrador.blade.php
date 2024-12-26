@@ -3,7 +3,7 @@
 <head>
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  <title>CONOCIMIENTO DE CARGA</title>
+  <title>CONOCIMIENTO DE CARGA BORRADOR</title>
   <style>
     @page {
     margin: 1cm; /* Establece un margen de 2 centímetros en todos los lados */

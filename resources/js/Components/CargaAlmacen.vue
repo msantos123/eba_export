@@ -96,12 +96,15 @@ const guardarSeleccion = async () => {
 };
 
 const openModal = async (carga_id, carga_cantidad) => {
+    console.log(carga_id);
+    console.log(carga_cantidad);
     modalSelect.value = true;
     cargaCantidad.value = carga_cantidad;
     cargaId.value = carga_id;
         try {
             const response = await axios.get(`/sigaSalidaDetalle/selectFechaAlmacen/${carga_id}`);
             cargaData.value = response.data;
+            console.log(response)
         } catch (error) {
             console.error('Error al obtener los datos:', error);
         }
@@ -156,14 +159,15 @@ const closeModal = () => {
                 <td class="px-4 py-2">
                     <span v-if="car.estado === 0" class="bg-gray-400 px-1 py-1 rounded-md">Vacio</span>
                     <span v-else-if="car.estado === 1" class="bg-green-400 px-1 py-1 rounded-md">Completo</span>
+                    <span v-else-if="car.estado === 2" class="bg-red-400 px-1 py-1 rounded-md">SinFechas</span>
                 </td>
                 <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                    <BlueButton v-if="car.estado === 1 " @click="$event=>openModalView(car.id, car.cantidad)">
+                    <BlueButton v-if="car.estado === 1" @click="$event=>openModalView(car.id, car.cantidad)">
                         <i class="fa-solid fa-eye" style="color: #ffffff;"></i>
                     </BlueButton>
-                    <SecondaryButton v-if="car.estado === 0" @click="$event=>openModal(car.id, car.cantidad)">
+                    <GreenButton v-if="car.estado === 0" @click="$event=>openModal(car.id, car.cantidad)">
                         <i class="fa-solid fa-rectangle-list" style="color: #ffffff;"></i>
-                    </SecondaryButton>
+                    </GreenButton>
                 </td>
             </tr>
         </tbody>

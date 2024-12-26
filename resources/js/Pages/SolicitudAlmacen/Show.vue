@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
 import SolicitudCarga from '@/Components/SolicitudCarga/SolicitudCarga.vue';
 import GreenButton from '@/Components/GreenButton.vue';
-import CargaAlmacen from '@/Components/CargaAlmacen.vue';
+import CargaAlmacenView from '@/Components/CargaAlmacenView.vue';
 
 const props = defineProps({
     solicitudcarga: { type:Object },
@@ -39,12 +39,12 @@ const CreateComprobanteSalida = (solicitudcarga) => {
                     </Link>
                 </div>
                 <div class="mx-1">
-                    <GreenButton v-if="props.solicitudcarga.estado === 1" @click.prevent="CreateComprobanteSalida(solicitudcarga)">
+                    <GreenButton v-if ="$page.props.user.permissions.includes('Crear Comprobante Salida') && props.solicitudcarga.estado === 1" @click.prevent="CreateComprobanteSalida(solicitudcarga)">
                         <i class="fa-solid fa-circle-check fa-lg" style="color: #ffffff;"></i> Realizar Comprobante de Salida
                     </GreenButton>
                 </div>
                 <div class="mx-1">
-                    <a v-if="props.solicitudcarga.estado !== 0" :href="route('solicitudAlmacen.pdfFechasElaboracion', solicitudcarga.id)" target="_blank"
+                    <a v-if ="$page.props.user.permissions.includes('Ver Fechas de Elaboracion') && props.solicitudcarga.estado !== 0" :href="route('solicitudAlmacen.pdfFechasElaboracion', solicitudcarga.id)" target="_blank"
                     class="inline-block rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-400 text-sm">
                     <i class="fa-regular fa-file-pdf" style="color: #ffffff;"></i> Ver Fechas de Elaboracion</a>
                 </div>
@@ -58,7 +58,7 @@ const CreateComprobanteSalida = (solicitudcarga) => {
                     <br>
                     <SolicitudCarga :solicitudcarga="solicitudcarga" />
                     <br>
-                    <CargaAlmacen :cargas = "cargas" />
+                    <CargaAlmacenView :cargas = "cargas" />
                 </div>
             </div>
         </div>

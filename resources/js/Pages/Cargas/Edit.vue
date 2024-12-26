@@ -3,9 +3,10 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import BlueButton from '@/Components/BlueButton.vue';
 import { Head, useForm, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import Modal from '@/Components/Modal.vue';
 import CargaPlanta from '@/Components/CargaPlanta.vue';
+import TextInput from '@/Components/TextInput.vue';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
@@ -84,7 +85,24 @@ const submitForm = async () => {
                         productMatch = true;
                     }
                     // Verifica el lote
-                    if (item.lote === mvdpt_lote) {
+                    let lote = '';
+                    const plantaId = Number(props.planta_id);
+                    switch (plantaId) {
+                        case 9:
+                            lote = 'FOR.-' + String(mvdpt_lote).padStart(3, '0') + '(EA)';
+                            break;
+                        case 10:
+                            lote = 'EA-' + String(mvdpt_lote).padStart(3, '0');
+                            break;
+                        case 25:
+                            lote = 'FO-' + String(mvdpt_lote).padStart(3, '0') + '(EA)';
+                            break;
+                        default:
+                            lote = 'DEFAULT-0' + String(mvdpt_lote).padStart(2, '0');
+                            break;
+                    }
+
+                    if (item.lote === lote) {
                         loteMatch = true;
                     }
                     // Verifica la cantidad
@@ -122,10 +140,13 @@ const submitForm = async () => {
                         // Preparar los datos a enviar
                         const dataToSend = {
                             solicitudcarga: props.solicitudcarga,
-                            salida_detalle: salida_detalle // Incluye los detalles de salida
+                            salida_detalle: salida_detalle
                         };
                         // Realiza la actualización
                         const form = axios;
+
+                        console.log(dataToSend);
+
                         form.put(route('solicitudcargas.update', dataToSend))
                         .then(response => {
                             console.log('Respuesta del servidor:', response); // Log para ver la respuesta del controlador
@@ -134,7 +155,7 @@ const submitForm = async () => {
                                 text: 'Los cambios han sido guardados.',
                                 icon: 'success',
                                 willClose: () => {
-                                    // Redirecciona a la página de solicitudes de carga después de que se cierre el modal
+                                     //Redirecciona a la página de solicitudes de carga después de que se cierre el modal
                                     window.location.href = route('solicitudcargas.index');
                                 }
                             });
@@ -162,6 +183,37 @@ const showMessageWithText = (text) => {
         showMessage.value = false;
     }, 5000);
 };
+
+//buscador
+const searchQuery = ref('');
+const filtered = computed(() => {
+    return props.salidaInventario.filter(sal => {
+        return (
+            sal.mvmvpt_nro.toString().includes(searchQuery.value.toLowerCase()) ||
+            sal.created_at.toString().includes(searchQuery.value.toLowerCase())
+        );
+    });
+});
+//paginacion
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+// Propiedad computada para paginar
+const paginated = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    return filtered.value.slice(start, start + itemsPerPage.value);
+});
+
+// Calcular el total de páginas
+const totalPages = computed(() => {
+    return Math.ceil(filtered.value.length / itemsPerPage.value);
+});
+
+// Navegación de páginas
+const goToPage = (page) => {
+    if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 </script>
 
 <template>
@@ -185,6 +237,7 @@ const showMessageWithText = (text) => {
                 </div>
             </div>
         </div>
+
     <div v-if="showMessage" class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-red-200 shadow-md">
         <div class="px-4 py-3 flex">
             <div  class="text-red-500">
@@ -198,6 +251,13 @@ const showMessageWithText = (text) => {
                 <div class="border-b-2 px-6 py-4 text-left text-xs tracking-wider">
                     <CargaPlanta :cargas = "cargas" />
                     <br>
+
+        <TextInput
+            type="text"
+            v-model="searchQuery"
+            placeholder="Buscar por nro. salida, fecha..."
+            class="border rounded p-2 mb-4"
+        />
                     <InputLabel value="Selecionar Nro. Salida de Planta" class="text-lg font-maximo pb-2 border-b border-gray-300"/>
                             <br>
                             <table class="w-full border-collapse font-semibold uppercase">
@@ -214,7 +274,7 @@ const showMessageWithText = (text) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="sal, i in salidaInventario" :key="sal.mvpt_id"class="border-b">
+                                    <tr v-for="sal, i in paginated" :key="sal.mvpt_id"class="border-b">
                                         <td class="px-4 py-2"> {{ i + 1 }} </td>
                                         <td class="px-4 py-2"> {{ sal.mvmvpt_nro }} </td>
                                         <td class="px-4 py-2"> {{ formatDate(sal.created_at) }}  </td>
@@ -246,6 +306,26 @@ const showMessageWithText = (text) => {
                                     </tr>
                                 </tbody>
                             </table>
+
+                            <div class="mt-4 flex justify-center border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                                <BlueButton
+                                    @click="goToPage(currentPage - 1)"
+                                    :disabled="currentPage === 1"
+                                    class="px-4 py-2"
+                                >
+                                    Anterior
+                                </BlueButton>
+                                <span class="mx-2 py-2">
+                                    Página {{ currentPage }} de {{ totalPages }}
+                                </span>
+                                <BlueButton
+                                    @click="goToPage(currentPage + 1)"
+                                    :disabled="currentPage === totalPages.value"
+                                    class="px-4 py-2 "
+                                >
+                                    Siguiente
+                                </BlueButton>
+                            </div>
                 </div>
             </div>
         </div>

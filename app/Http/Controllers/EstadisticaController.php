@@ -48,6 +48,7 @@ class EstadisticaController extends Controller
 
         $result = PreFactura::select($selectField)
         ->selectRaw( $operation)
+        ->where('anulado',0)
         ->groupBy($category)
         ->get();
         return response()->json($result);

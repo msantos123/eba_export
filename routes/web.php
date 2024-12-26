@@ -29,6 +29,7 @@ use App\Http\Controllers\LiberacionController;
 use App\Http\Controllers\EstadisticaController;
 use App\Http\Controllers\PreFacturaController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\RolController;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\App;
 
@@ -66,6 +67,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('employees', EmployeeController::class);
     Route::get('graphic',[EmployeeController::class, 'EmployeeByDepartment'])->name('graphic');
     Route::get('reports',[EmployeeController::class, 'reports'])->name('reports');
+    //roles
+    Route::get('roles/index', [RolController::class, 'index'])->name('roles.index');//uso
+    Route::post('roles/store', [RolController::class, 'store'])->name('roles.store');//uso
+    Route::get('roles/show/{id}', [RolController::class, 'show'])->name('roles.show');//uso
+    Route::post('roles/asignacion', [RolController::class, 'asignacion'])->name('roles.asignacion');//uso
+    Route::post('roles/{id}/permissions', [RolController::class, 'updatePermissions'])->name('roles.updatePermissions');//uso
     //controladores planta
     Route::resource('plantas', PlantaController::class);
     Route::get('plantas/estado/{id}', [PlantaController::class, 'active'])->name('plantas.active');
@@ -101,6 +108,7 @@ Route::middleware('auth')->group(function () {
     //KARDEX
     Route::get('kardexs/index', [KardexController::class, 'index'])->name('kardexs.index');//uso
     Route::get('kardexs/show/{id}', [KardexController:: class, 'show'])->name('kardexs.show');//uso
+    Route::post('kardexs/store', [KardexController::class, 'store'])->name('kardexs.store');//uso
     //SOLICITUD ALMACEN
     Route::get('solicitudAlmacen/index', [SolicitudAlmacenController::class, 'index'])->name('solicitudAlmacen.index');//uso
     Route::get('solicitudAlmacen/create/{planta_id}', [SolicitudAlmacenController::class, 'create'])->name('solicitudAlmacen.create');//uso
@@ -161,7 +169,9 @@ Route::middleware('auth')->group(function () {
     Route::get('estadistica/sumatoria', [EstadisticaController::class, 'sumatoria'])->name('estadistcia.sumatoria');//uso
     //PRE FACTURA
     Route::get('pre_factura/index', [PreFacturaController::class, 'index'])->name('pre_factura.index');//uso
+    Route::get('pre_factura/create/{id}', [PreFacturaController::class, 'create'])->name('pre_factura.create');//uso
     Route::get('pre_factura/show/{id}', [PreFacturaController::class, 'show'])->name('pre_factura.show');//uso
+    Route::post('pre_factura/store', [PreFacturaController::class, 'store'])->name('pre_factura.store');//uso
 });
 
 require __DIR__.'/auth.php';

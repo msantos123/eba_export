@@ -266,3 +266,24 @@ select sum(cantidad) as total from export.cargas
 select * from export.solicitudcargas
 select * from export.comprobante_salidas
 select * from export.pre_facturas
+
+select * from export.roles
+truncate table export.roles
+select * from export.model_has_roles
+select * from export.model_has_permissions
+select * from export.role_has_permissions
+select * from export.permissions
+
+select * from public._bp_usuarios
+
+update export.solicitudcargas set usuario_id = 2172 where id = 68
+select * from export.solicitudcargas where tipo = 'INGRESO'
+delete from export.solicitudcargas where tipo = 'INGRESO'
+select * from export.solicitudcargas
+
+select * from siga.producto_terminado_movimiento where mvmvpt_planta_id = 9 AND mvmvpt_tipo = 'SALIDA' order by mvpt_id desc
+select * from siga._bp_planta where nombre_planta like '%RIBERALTA%'
+
+select * from export.siga_salida_detalles order by id desc
+
+select * from siga.producto_terminado_movimiento_detalle where mvdpt_mvpt_id = 19602

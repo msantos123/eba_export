@@ -64,17 +64,37 @@ class Solicitudcarga extends Model
             'tipo' => 'INGRESO',
         ]);
         $solicitudcargaId = $solicitudcarga->id;
-        // Crear las cargas
+
         foreach ($data['carga'] as $detail) {
+
+            $numeroLote = $detail[2];
+            $lote = '';
+            switch ($data['planta_id']) {
+                case 9:
+                    $lote = 'FOR.-' . str_pad($numeroLote, 3, '0', STR_PAD_LEFT) . '(EA)';
+                    break;
+                case 10:
+                    $lote = 'EA-' . str_pad($numeroLote, 3, '0', STR_PAD_LEFT);
+                    break;
+                case 25:
+                    $lote = 'FO-' . str_pad($numeroLote, 3, '0', STR_PAD_LEFT) . '(EA)';
+                    break;
+                default:
+                    // Manejar el caso por defecto si es necesario
+                    $lote = 'DEFAULT-0' . str_pad($numeroLote, 3, '0', STR_PAD_LEFT);
+                    break;
+            }
+
             $solicitudcarga->cargas()->create([
                 'codigo_producto'   => $detail[0],
                 'nombre_producto'   => $detail[1],
-                'lote'              => $detail[2],
-                'descripcion'       => $detail[3],
-                'cantidad'          => $detail[4],
-                'kilosnetos'        => $detail[5],
-                'librasnetas'       => $detail[6],
-                'receta_id'         => $detail[7],
+                'lote'              => $lote,
+                'calidad'           => $detail[3],
+                'descripcion'       => $detail[4],
+                'cantidad'          => $detail[5],
+                'kilosnetos'        => $detail[6],
+                'librasnetas'       => $detail[7],
+                'receta_id'         => $detail[8],
                 'solicitud_cargas'  => $solicitudcargaId,
             ]);
         }

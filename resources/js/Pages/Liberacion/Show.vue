@@ -127,19 +127,19 @@ const getFileUrl = (file) => {
                     </Link>
                 </div>
                 <div class="mx-1">
-                    <Link v-if="props.liberacion.libe_estado === 0" :href="route('liberacion.aprobacion', { estado: 1, id: props.liberacion.id})"
+                    <Link v-if ="$page.props.user.permissions.includes('Revisar Liberacion') && props.liberacion.libe_estado === 0" :href="route('liberacion.aprobacion', { estado: 1, id: props.liberacion.id})"
                     class="inline-block rounded-md bg-green-500 px-4 py-2 text-white hover:bg-green-400 text-sm">
                     <i class="fa-solid fa-file-circle-check" style="color: #ffffff;"></i> Liberación Revisada
                     </Link>
                 </div>
                 <div class="mx-1">
-                    <Link v-if="props.liberacion.libe_estado === 1" :href="route('liberacion.aprobacion', { estado: 2, id: props.liberacion.id})"
+                    <Link v-if ="$page.props.user.permissions.includes('Aporbacion Liberacion') && props.liberacion.libe_estado === 1" :href="route('liberacion.aprobacion', { estado: 2, id: props.liberacion.id})"
                     class="inline-block rounded-md bg-green-500 px-4 py-2 text-white hover:bg-green-400 text-sm">
                     <i class="fa-solid fa-file-circle-check" style="color: #ffffff;"></i> Aprobar Liberación
                     </Link>
                 </div>
                 <div class="mx-1">
-                    <a v-if ="props.liberacion.libe_estado === 2"
+                    <a v-if ="$page.props.user.permissions.includes('Generar Carta Liberacion') && props.liberacion.libe_estado === 2"
                     :href="route('liberacion.pdf', props.liberacion.id)" target="_blank"
                     class="inline-block rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-400 text-sm">
                     <i class="fa-regular fa-file-pdf fa-lg" style="color: #ffffff;"></i> Generar Carta Liberacion</a>

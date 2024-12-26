@@ -109,12 +109,11 @@ class ConocimientoController extends Controller
 
         $pdf = app('dompdf.wrapper');
         $pdf->setPaper('letter');
-
-        if($conocimientos->estado == 1)
-        { $pdf = $pdf->loadView('conocimiento', compact('conocimientos','cargas'));
-        }else{
-            $pdf = $pdf->loadView('conocimiento_borrador', compact('conocimientos','cargas'));
-        }
+        //dd($conocimientos->estado);
+        if($conocimientos->estado == 1 || $conocimientos->estado == 2)
+        { $pdf = $pdf->loadView('conocimiento', compact('conocimientos','cargas'));}
+        if($conocimientos->estado == 0)
+        { $pdf = $pdf->loadView('conocimiento_borrador', compact('conocimientos','cargas'));}
         return $pdf->stream('conocimientodecarga.pdf');
     }
 

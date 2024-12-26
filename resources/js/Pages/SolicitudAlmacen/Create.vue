@@ -198,7 +198,6 @@ function validateCantidadSolicitada() {
             </div>
         </div>
     </div>
-    {{ props.planta }}
     <div class="min-w-full overflow-x-auto rounded-lg shadow">
         <div class="w-full whitespace-no-wrap">
             <div class="border-b bg-gray-50 text-left text-xs tracking-wide text-gray-500">

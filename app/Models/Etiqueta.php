@@ -22,6 +22,8 @@ class Etiqueta extends Model
         {
             $query->where('tipo', 'SALIDA');
         }, 'solicitudCargas.cargas'])
+        ->orderBy('created_at', 'desc')
+        ->orderBy('factura', 'desc')
         ->get();
 
         return $comprobanteSalida;

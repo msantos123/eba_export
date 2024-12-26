@@ -87,7 +87,7 @@ const getFileUrl = (file) => {
                 </div>
                 <div class="mx-1">
                     <GreenButton @click.prevent="CreateIngreso(conocimientos) "
-                    v-if ="$page.props.user.permissions.includes('create ingreso') && props.conocimientos.estado === 1">
+                    v-if ="$page.props.user.permissions.includes('Crear Comprobante Ingreso') && props.conocimientos.estado === 1">
                     <i class="fa-solid fa-circle-check fa-lg" style="color: #ffffff;"></i> Realizar Comprobante de Ingreso </GreenButton>
                 </div>
             </div>
@@ -100,7 +100,7 @@ const getFileUrl = (file) => {
                     <br>
                     <CargaPlanta :cargas = "cargas"/>
                     <br>
-                    <div v-if="props.conocimientos.estado === 1">
+                    <div v-if="props.conocimientos.estado === 1 || props.conocimientos.estado === 2">
                         <InputLabel value="Subir Conocimiento Firmado" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
                         <br>
                         <div v-if="props.conocimientos.pdf_conocimiento" class="preview-container">

@@ -23,6 +23,7 @@ const form = useForm({
 
 const descripcion = ref('Cajas de Almendras');
 const carga = ref([]);
+const calidad = ref('');
 
 const add = () => {
     if (validateInputs()) {
@@ -41,6 +42,7 @@ const add = () => {
         selectedInventario.value.codigo_inventario,
         selectedInventario.value.nombre_inventario,
         selectedInventario.value.lote,
+        calidad.value,
         descripcion.value,
         cantidadSolicitada.value,
         kilosnetos,
@@ -51,6 +53,7 @@ const add = () => {
     descripcion.value = 'Cajas de Almendras';
     selectedInventario.value = '';
     cantidadSolicitada.value = '';
+    calidad.value = '';
 }
 
 };
@@ -61,6 +64,7 @@ const remove = (index) => {
   };
 
 const submitForm = (solicitudcarga) => {
+    console.log(form.carga);
     if (validateCarga()) {
         const alerta = Swal.mixin({
             buttonsStyling: true,
@@ -102,6 +106,10 @@ const validateInputs = () => {
     }
     if (cantidadSolicitada.value > selectedInventario.value.cantidad) {
         showMessageWithText('La cantidad solicitada supera la cantidad disponible.');
+        return false;
+    }
+    if (!calidad.value) {
+        showMessageWithText('Debes selecionar una calidad del producto.');
         return false;
     }
     return true;
@@ -209,7 +217,7 @@ function validateCantidadSolicitada() {
                     <InputLabel value="Datos de Carga" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
                     <form @submit.prevent="submitForm">
                         <br>
-                            <div class="grid grid-cols-5 gap-1 mt-2">
+                            <div class="grid grid-cols-6 gap-1 mt-2">
                                 <div class="col-span-2">
                                     <InputLabel for="producto_id" value="Producto"></InputLabel>
                                     <select id="planta_id" v-model="selectedInventario"
@@ -224,6 +232,16 @@ function validateCantidadSolicitada() {
                                                 cantidad: Math.floor(inventario.total_cantidad),
                                                 receta:inventario.skpt_rece_id}">
                                         {{ inventario.rece_nombre }} - LOTE: {{ inventario.skpt_lote }}</option>
+                                    </select>
+                                    <InputError v-if="addError" :message="addError" class="mt-2" />
+                                </div>
+                                <div class="col-span-1">
+                                    <InputLabel value="Calidad"></InputLabel>
+                                    <select v-model="calidad" @change="updateSelectedCalidadData"
+                                    class="mt-1 block w-full rounded-md">
+                                        <option value="">-Seleccione-</option>
+                                        <option value="CONVENCIONAL">CONVENCIONAL</option>
+                                        <option value="ORGANICO">ORGANICO</option>
                                     </select>
                                     <InputError v-if="addError" :message="addError" class="mt-2" />
                                 </div>
@@ -257,6 +275,7 @@ function validateCantidadSolicitada() {
                                     <tr class="bg-gray-200">
                                         <th class="px-4 py-2">Codigo</th>
                                         <th class="px-4 py-2">Producto</th>
+                                        <th class="px-4 py-2">Calidad</th>
                                         <th class="px-4 py-2">Lote</th>
                                         <th class="px-4 py-2">Descripción</th>
                                         <th class="px-4 py-2">Cantidad</th>
@@ -274,6 +293,7 @@ function validateCantidadSolicitada() {
                                         <td class="px-4 py-2"> {{ carga[index][4] }} </td>
                                         <td class="px-4 py-2"> {{ carga[index][5] }} </td>
                                         <td class="px-4 py-2"> {{ carga[index][6] }} </td>
+                                        <td class="px-4 py-2"> {{ carga[index][7] }} </td>
                                         <td class="px-4 py-2">
                                         <WarningButton type="button" @click="remove(index, carga)">
                                         <i class="fa-solid fa-trash-can px" style="color: #ffffff;"></i>

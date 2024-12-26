@@ -47,9 +47,7 @@ class SalidaInventario extends Model
                 ->join('siga.insumo_receta','insumo_receta.rece_id','=','mvdpt_rece_id')
                 ->groupBy('mvdpt_mvpt_id', 'mvdpt_lote', 'mvdpt_rece_id', 'rece_nombre');
         }])
-        ->limit(10)
         ->get();
-
         return $salidaInventario;
     }
 

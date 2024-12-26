@@ -18,7 +18,7 @@ class ComprobanteSalidaController extends Controller
 {
     public function index()//uso
     {
-        $comprobanteSalida = ComprobanteSalida::all();
+        $comprobanteSalida = ComprobanteSalida::orderBy('fecha_salida', 'desc')->get();
         return Inertia::render('ComprobanteSalida/Index', [
             'comprobanteSalida' => $comprobanteSalida,
         ]);

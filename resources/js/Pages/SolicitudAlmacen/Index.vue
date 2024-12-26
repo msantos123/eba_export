@@ -3,6 +3,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import Swal from 'sweetalert2';
 import WarningButton from '@/Components/WarningButton.vue';
+import { ref, defineProps, computed } from 'vue';
+import TextInput from '@/Components/TextInput.vue';
+import BlueButton from '@/Components/BlueButton.vue';
 
 const props = defineProps({
     solicitudAlmacen: { type: Object },
@@ -47,6 +50,47 @@ const deleteSolicitud = (id, fecha) => {
         }
     });
 };
+
+//buscador
+const searchQuery = ref('');
+const normalizeString = (str) => str.toString().toLowerCase().trim();
+const filtered = computed(() => {
+
+    return props.solicitudAlmacen.filter(sol => {
+        return (
+            normalizeString((sol.codigo ?? '')).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(sol.fecha).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(sol.usuario).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(sol.planta).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(sol.total_cantidad).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(sol.total_kilosnetos).includes(normalizeString(searchQuery.value)) ||
+            normalizeString(sol.total_librasnetas).includes(normalizeString(searchQuery.value))
+        );
+
+    });
+
+});
+
+//paginacion
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+// Propiedad computada para paginar
+const paginated = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    return filtered.value.slice(start, start + itemsPerPage.value);
+});
+
+// Calcular el total de páginas
+const totalPages = computed(() => {
+    return Math.ceil(filtered.value.length / itemsPerPage.value);
+});
+
+// Navegación de páginas
+const goToPage = (page) => {
+    if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 </script>
 
 <template>
@@ -56,7 +100,8 @@ const deleteSolicitud = (id, fecha) => {
         <template #header>
             Solicitudes de Carga Almacenes
         </template>
-            <div v-if ="$page.props.user.permissions.includes('create solicitud')" class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md" >
+            <div  class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md"
+            >
                 <div class="px-4 py-2">
                     <div class="flex flex-wrap mx-1">
                         <div v-for="planta in props.plantas" :key="planta.planta_id" class="mr-2 mb-2">
@@ -68,6 +113,12 @@ const deleteSolicitud = (id, fecha) => {
                     </div>
                 </div>
             </div>
+            <TextInput
+            type="text"
+            v-model="searchQuery"
+            placeholder="Buscar por codigo, fecha, usuario, planta, total cajas, total kilos netos, total libras netas..."
+            class="border rounded p-2 mb-4"
+            />
             <div class="min-w-full overflow-x-auto rounded-lg shadow">
                 <table class="w-full whitespace-no-wrap">
                     <thead>
@@ -111,7 +162,7 @@ const deleteSolicitud = (id, fecha) => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="sol, i in solicitudAlmacen" :key="sol.id">
+                        <tr v-for="sol, i in paginated" :key="sol.id">
                             <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                                 {{ (i+1) }}
                             </td>
@@ -149,14 +200,14 @@ const deleteSolicitud = (id, fecha) => {
                                 </Link>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
-                                <Link v-if ="sol.estado === 0"
+                                <Link v-if ="$page.props.user.permissions.includes('Modificar Solicitud Almacen') && sol.estado === 0"
                                 :href="route('solicitudAlmacen.edit', sol.id)"
                                 class="inline-block rounded-md bg-yellow-400 px-4 py-2 text-white hover:bg-yellow-300 text-sm">
                                 <i class="fa-regular fa-square-check fa-lg" style="color: #ffffff;"></i>
                                 </Link>
                             </td>
                             <td class="border-b border-gray-200 bg-white px-2 py-3 text-sm">
-                                <WarningButton v-if ="$page.props.user.permissions.includes('delete solicitud') && sol.estado === 0"
+                                <WarningButton v-if ="$page.props.user.permissions.includes('Eliminar Solicitud Almacen') && sol.estado === 0"
                                     @click="() => deleteSolicitud(sol.id, sol.fecha)">
                                     <i class="fa-solid fa-trash"></i>
                                 </WarningButton>
@@ -164,6 +215,25 @@ const deleteSolicitud = (id, fecha) => {
                         </tr>
                     </tbody>
                 </table>
+                <div class="mt-4 flex justify-center border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                    <BlueButton
+                        @click="goToPage(currentPage - 1)"
+                        :disabled="currentPage === 1"
+                        class="px-4 py-2"
+                    >
+                        Anterior
+                    </BlueButton>
+                    <span class="mx-2 py-2">
+                        Página {{ currentPage }} de {{ totalPages }}
+                    </span>
+                    <BlueButton
+                        @click="goToPage(currentPage + 1)"
+                        :disabled="currentPage === totalPages.value"
+                        class="px-4 py-2 "
+                    >
+                        Siguiente
+                    </BlueButton>
+                </div>
             </div>
         </AuthenticatedLayout>
 </template>

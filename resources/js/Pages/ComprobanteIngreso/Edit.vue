@@ -119,9 +119,9 @@ const getFileUrl = (file) => {
                     <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
                     </Link>
                 </div>
-                <div class="mx-1" v-if="props.comprobateIngreso.estado === 0">
+                <div class="mx-1" v-if ="$page.props.user.permissions.includes('Ingresar Carga Kardex') && props.comprobateIngreso.estado === 0">
                     <GreenButton @click.prevent="submitForm(1)">
-                    <i class="fa-solid fa-circle-check fa-lg" style="color: #ffffff;"></i> Realizar Ingreso Almacen </GreenButton>
+                    <i class="fa-solid fa-circle-check fa-lg" style="color: #ffffff;"></i> Realizar Ingreso Kardex </GreenButton>
                 </div>
             </div>
         </div>
@@ -135,7 +135,7 @@ const getFileUrl = (file) => {
                         <br>
                         <CargaPlanta :cargas="cargas"/>
                         <br>
-                        <div v-if="props.comprobateIngreso.estado === 1">
+                        <div v-if="props.comprobateIngreso.estado === 0">
                             <InputLabel value="Subir Comprobante Ingreso Firmado" class="text-lg font-maximo pb-2 border-b border-gray-300"></InputLabel>
                             <br>
                             <div v-if="props.comprobateIngreso.pdf_comprobante_ingreso" class="preview-container">

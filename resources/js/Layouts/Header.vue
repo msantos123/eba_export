@@ -20,9 +20,6 @@
                 </template>
 
                 <template #content>
-                    <dropdown-link :href="route('profile.edit')">
-                        Perfil
-                    </dropdown-link>
 
                     <dropdown-link class="w-full text-left" :href="route('logout')" method="post" as="button">
                         Cerrar Sesion

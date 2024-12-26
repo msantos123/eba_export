@@ -38,7 +38,7 @@ return new class extends Migration
             $table->date('fecha_tercer_pago')->nullable();
             $table->double('total_pagos')->nullable();
             $table->double('saldos')->nullable();
-            $table->integer('anulado')->default();
+            $table->integer('anulado')->default(0);
             $table->timestamps();
         });
     }

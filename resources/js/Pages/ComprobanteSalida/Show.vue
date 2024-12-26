@@ -7,6 +7,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import TextDisabled from '@/Components/TextDisabled.vue';
 import CargaAlmacen from '@/Components/CargaAlmacen.vue';
 import GreenButton from '@/Components/GreenButton.vue';
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const props = defineProps({
     comprobanteSalida: { type: Object },
@@ -16,6 +18,7 @@ const props = defineProps({
 
 const form = useForm({
     //datos de comprobante de salida
+    id_comprobanteSalida: props.comprobanteSalida.id,
     fecha_salida: props.comprobanteSalida.fecha_salida,
     empresa: props.comprobanteSalida.empresa,
     responsable: props.comprobanteSalida.responsable,
@@ -77,6 +80,12 @@ const handleSubmit = async () => {
 const getFileUrl = (file) => {
   return `${window.location.origin}/storage/comprobante_salida/${file}`;
 };
+
+const CrearPrefactura = (id) => {
+    console.log(id);
+    form.get(route('pre_factura.create', id), {
+    });
+}
 </script>
 
 <template>
@@ -93,9 +102,13 @@ const getFileUrl = (file) => {
                     <i class="fa-solid fa-left-long" style="color: #ffffff;"></i> Volver
                     </Link>
                 </div>
+                <div class="mx-1">
+                    <GreenButton v-if ="$page.props.user.permissions.includes('Crear Prefactura')" @click.prevent="CrearPrefactura(props.comprobanteSalida.id) "
+                    >
+                    <i class="fa-solid fa-file-invoice-dollar" style="color: #ffffff;"></i> Realizar Prefactura </GreenButton>
+                </div>
             </div>
         </div>
-
     <div class="min-w-full overflow-x-auto rounded-lg shadow">
         <div class="w-full whitespace-no-wrap">
             <div class="border-b bg-gray-50 text-left text-xs tracking-wide text-gray-500">

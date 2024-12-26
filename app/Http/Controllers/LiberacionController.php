@@ -24,10 +24,7 @@ class LiberacionController extends Controller
 
     public function show($id)//uso
     {
-        $liberacion = Liberacion::select('_bp_usuarios.usr_usuario as usuario','liberaciones.*')
-        ->join('public._bp_usuarios','public._bp_usuarios.usr_id','=','liberaciones.libe_usu')
-        ->where('liberaciones.id', $id)
-        ->first();
+        $liberacion = Liberacion::where('liberaciones.id', $id)->first();
         return Inertia:: render('Liberacion/Show', [
             'liberacion' => $liberacion,
         ]);

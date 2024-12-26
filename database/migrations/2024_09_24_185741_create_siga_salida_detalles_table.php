@@ -15,7 +15,7 @@ return new class extends Migration
             $table->integer('rece_id');
             $table->double('cantidad_detalle',10);
             $table->double('cantidad_salida',10)->nullable();
-            $table->integer('lote_detalle');
+            $table->string('lote_detalle');
             $table->date('fecha_elaboracion');
             $table->date('fecha_vencimiento');
             $table->date('fecha_envasado');

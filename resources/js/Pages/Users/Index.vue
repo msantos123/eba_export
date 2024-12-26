@@ -1,111 +1,91 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
-import WarningButton from '@/Components/WarningButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Modal from '@/Components/Modal.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { nextTick, ref } from 'vue';
+import { Head } from '@inertiajs/vue3';
+import { defineProps, ref, computed } from 'vue';
+import GreenButton from '@/Components/GreenButton.vue';
 import Swal from 'sweetalert2';
-
-const ci = ref(null);
-const paterno = ref(null);
-const materno = ref(null);
-const name = ref(null);
-const email = ref(null);
-const celular = ref(null);
-
-const modal = ref(false);
-const title = ref('');
-const operation = ref(1);
-const id = ref('');
+import TextInput from '@/Components/TextInput.vue';
+import BlueButton from '@/Components/BlueButton.vue';
 
 const props = defineProps({
-    users: { type: Object, },
+    usuarios: { type: Array, required: true,},
+    roles: {type: Object, requier: true,}
 
 });
+const modal = ref(false);
+const selectedUser = ref({});
+const selectedRole = ref(null);
 
-const form = useForm({
-    ci:'',
-    paterno:'',
-    materno:'',
-    name:'',
-    email:'',
-    celular:'',
-    rol:'',
-});
-
-
-const openModal = (op,ci,paterno,materno,name,email,celular,rol,usuario)=>{
-    modal.value = true;
-    nextTick(() =>ci.value.focus());
-    nextTick(() =>paterno.value.focus());
-    nextTick(() =>materno.value.focus());
-    nextTick(() =>name.value.focus());
-    nextTick(() =>email.value.focus());
-    nextTick(() =>celular.value.focus());
-    nextTick(() =>rol.value.focus());
-    operation.value = op;
-    id.value = usuario;
-    if(op == 1){
-        title.value = 'Crear Usuario';
-    }
-    else
-    {
-        title.value = 'Editar Usuario';
-        form.ci=ci;
-        form.paterno=paterno;
-        form.materno=materno;
-        form.name=name;
-        form.email=email;
-        form.celular=celular;
-        form.rol=rol;
-    }
-}
-
+const openModal = (user) => {
+    selectedUser.value = user;
+    modal.value = true
+};
 const closeModal = () => {
-        modal.value = false;
-        form.reset();
+    modal.value = false;
+    location.reload();
+};
+
+const assignRole = async () => {
+    console.log(selectedUser.value.usr_id);
+    console.log(selectedRole.value);
+    try {
+        await axios.post('/roles/asignacion', {
+            user_id: selectedUser.value.usr_id,
+            roles: [selectedRole.value],
+        });
+
+        await Swal.fire({
+            title: 'Éxito!',
+            text: 'Rol asignado correctamente.',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+        });
+
+        closeModal();
+    } catch (error) {
+        console.error(error.response.data);
+
+        await Swal.fire({
+            title: 'Error!',
+            text: 'Hubo un problema al asignar el rol.',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+        });
     }
+};
 
-const save = () => {
-    if(operation.value == 1){
-        form.post(route('users.store'),{
-            onSuccess: () => {ok('Usuario Registrado')},
-        })
-    }else{
-        form.put(route('users.update',id.value),{
-            onSuccess: () => {ok('Usuario Actualizado')},
-        })
+const searchQuery = ref('');
+const filteredUsuarios = computed(() => {
+    return props.usuarios.filter(user => {
+        return (
+            user.usr_id.toString().includes(searchQuery.value) ||
+            user.usr_usuario.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+            user.usr_estado.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+    });
+});
+//paginacion
+const currentPage = ref(1);
+const itemsPerPage = ref(10);
+// Propiedad computada para paginar
+const paginatedUsuarios = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    return filteredUsuarios.value.slice(start, start + itemsPerPage.value);
+});
+
+// Calcular el total de páginas
+const totalPages = computed(() => {
+    return Math.ceil(filteredUsuarios.value.length / itemsPerPage.value);
+});
+
+// Navegación de páginas
+const goToPage = (page) => {
+    if (page > 0 && page <= totalPages.value) {
+        currentPage.value = page;
     }
-}
-
-const ok = (msj) => {
-    form.reset();
-    closeModal();
-    Swal.fire({title:msj,icon:'success'});
-}
-
-const cambiaEstado = (id, ci) =>{
-    const alerta = Swal.mixin({
-        buttonsStyling:true
-    });
-    alerta.fire({
-        title:'Esta seguro que desea cambiar el estado del usuario con CI '+ci+'?',
-        icon: 'question', showCancelButton:true,
-        confirmButtonText:'<i class="fa-solid fa-check"></i> Si, desactivar.',
-        cancelButtonText: '<i class="fa-solid fa-ban"></i> Cancelar.',
-    }).then((result)=>{
-        if(result.isConfirmed){
-            form.get(route('users.active',id),{
-                onSuccess: () => {ok('Usuario Desactivado')}
-            });
-        }
-    });
-}
+};
 </script>
 <template>
     <Head title="Users" />
@@ -114,156 +94,122 @@ const cambiaEstado = (id, ci) =>{
         <template #header>
             Usuarios
         </template>
-
-        <div class="mb-4 inline-flex w-full overflow-hidden rounded-lg bg-white shadow-md">
-            <div class="-mx-3 px-4 py-2">
-                <div class="mx-3">
-                    <PrimaryButton @click = "$event => openModal(1)">
-                        <i class="fa-solid fa-plus-circle"></i> Adicionar
-                    </PrimaryButton>
-                </div>
-            </div>
-        </div>
-
+        <TextInput
+            type="text"
+            v-model="searchQuery"
+            placeholder="Buscar por id, usuario, estado, rol..."
+            class="border rounded p-2 mb-4"
+        />
         <div class="min-w-full overflow-x-auto rounded-lg shadow">
             <table class="w-full whitespace-no-wrap">
                 <thead>
                     <tr class="border-b bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                         <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            CI
+                            ID
                         </th>
                         <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Ap. Paterno
+                            Usuario
                         </th>
                         <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Ap. Materno
-                        </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Nombres
-                        </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Email
-                        </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Celular
-                        </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Rol
-                        </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                             Estado
                         </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Editar
+                        <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                            Rol
                         </th>
-                        <th class="border-b-2 border-gray-200 bg-gray-100 px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
-                            Cambiar Estado
+                        <th class="border-b-2 border-gray-200 bg-gray-100 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                            Editar Accesos
                         </th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="user in users.data" :key="user.id" class="text-gray-700">
+                    <tr v-for="user in paginatedUsuarios" :key="user.usr_id" class="text-gray-700">
                         <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.ci }}</p>
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.usr_id }}</p>
                         </td>
                         <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.paterno }}</p>
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.usr_usuario }}</p>
                         </td>
                         <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.materno }}</p>
+                            <p class="text-gray-900 whitespace-no-wrap">{{ user.usr_estado }}</p>
                         </td>
                         <td class="border-b border-gray-200 bg-white px-3 py-3 text-sm">
                             <p class="text-gray-900 whitespace-no-wrap">{{ user.name }}</p>
                         </td>
                         <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.email }}</p>
-                        </td>
-                        <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.celular }}</p>
-                        </td>
-                        <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <p class="text-gray-900 whitespace-no-wrap">{{ user.role }}</p>
-                        </td>
-                        <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <span v-if="user.estado === '0'" class="bg-gray-300 px-2 py-1 rounded-md">NoActivo</span>
-                            <span v-else-if="user.estado === '1'" class="bg-green-400 px-2 py-1 rounded-md">Activo</span>
-                        </td>
-                        <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <SecondaryButton @click="$event=>openModal(2,user.ci,user.paterno,user.materno,user.name,user.email,user.celular,user.planta_id,user.rol,user.id)">
+                            <SecondaryButton @click="$event=>openModal(user)">
                                 <i class="fa-solid fa-edit"></i>
                             </SecondaryButton>
-                        </td>
-                        <td class="border-b border-gray-200 bg-white px-5 py-3 text-sm">
-                            <WarningButton @click="() => cambiaEstado(user.id, user.ci)">
-                                <i class="fa-solid fa-cancel"></i>
-                            </WarningButton>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            <div class="mt-4 flex justify-center border-b border-gray-200 bg-white px-3 py-3 text-sm">
+                <BlueButton
+                    @click="goToPage(currentPage - 1)"
+                    :disabled="currentPage === 1"
+                    class="px-4 py-2"
+                >
+                    Anterior
+                </BlueButton>
+                <span class="mx-2 py-2">
+                    Página {{ currentPage }} de {{ totalPages }}
+                </span>
+                <BlueButton
+                    @click="goToPage(currentPage + 1)"
+                    :disabled="currentPage === totalPages.value"
+                    class="px-4 py-2 "
+                >
+                    Siguiente
+                </BlueButton>
+            </div>
         </div>
 
         <Modal :show="modal" @close="closeModal">
-            <h2 class="p-3 text-lg font.medium text-hray-900">{{ title }}</h2>
-            <div class="p-3 flex space-x-4">
-                <div class="w-1/2">
-                    <InputLabel for="ci" value="Carnet de Identidad:"></InputLabel>
-                    <TextInput id="ci" ref="ci" v-model="form.ci" type="number" placeholder="Ej. 8323432"></TextInput>
-                    <InputError :message="form.errors.ci" class="mt-2"></InputError>
-                </div>
-                <div class="w-1/2">
-                    <InputLabel for="paterno" value="Apellido Paterno:"></InputLabel>
-                    <TextInput id="paterno" ref="paterno" v-model="form.paterno" type="text" placeholder="Ej. Sandoval"></TextInput>
-                    <InputError :message="form.errors.paterno" class="mt-2"></InputError>
-                </div>
-            </div>
-            <div class="p-3 flex space-x-4">
-                <div class="w-1/2">
-                    <InputLabel for="materno" value="Apellido Materno:"></InputLabel>
-                    <TextInput id="materno" ref="materno" v-model="form.materno" type="text" placeholder="Ej. Ergueta"></TextInput>
-                    <InputError :message="form.errors.materno" class="mt-2"></InputError>
-                </div>
-                <div class="w-1/2">
-                    <InputLabel for="name" value="Nombres:"></InputLabel>
-                    <TextInput id="name" ref="name" v-model="form.name  " type="text" placeholder="Ej. Juan Jose"></TextInput>
-                    <InputError :message="form.errors.name" class="mt-2"></InputError>
-                </div>
-            </div>
-            <div class="p-3 flex space-x-4">
-                <div class="w-1/2">
-                    <InputLabel for="celular" value="Celular:"></InputLabel>
-                    <TextInput id="celular" ref="celular" v-model="form.celular" type="number" placeholder="Ej. 77202828"></TextInput>
-                    <InputError :message="form.errors.celular" class="mt-2"></InputError>
-                </div>
-                <div class="w-1/2">
-                    <InputLabel for="email" value="Email:"></InputLabel>
-                    <TextInput id="email" ref="email" v-model="form.email" type="text" placeholder="Ej. example@eba.bo"></TextInput>
-                    <InputError :message="form.errors.email" class="mt-2"></InputError>
-                </div>
-            </div>
-            <div class="p-3 flex space-x-4">
-                <div class="w-1/2">
-                    <InputLabel for="rol" value="Rol:"></InputLabel>
-                    <select id="rol" v-model="form.rol" class="mt-1 block w-full rounded">
-                        <option value="">-- Seleccione una opción --</option>
-                        <option value="admin">Administrador</option>
-                        <option value="oficina">Oficina Central</option>
-                        <option value="planta">Planta Productora</option>
-                        <option value="almacen">Almacen El Alto</option>
-                    </select>
-                </div>
-            </div>
 
-            <div class="p-3 mt-6 flex justify-between">
-                <PrimaryButton :disabled="form.processing" @click="save">
-                    <i class="fa-solid fa-save"></i> Guardar
-                </PrimaryButton>
-                <WarningButton class="ml-3" :disabled="form.processing" @click="closeModal">
-                    <i class="fa-solid fa-cancel"></i> Cancelar
-                </WarningButton>
-            </div>
+                <div class="w-full whitespace-no-wrap">
+                    <div class="border-b bg-gray-50 text-left text-xs tracking-wide text-gray-500">
+                        <div class="border-b-2 px-4 py-2 text-left text-xs tracking-wider">
+                            <h2 class="p-3 text-lg font-medium text-gray-900">Asigna un Rol</h2>
+                            <table class="w-full whitespace-no-wrap">
+                                <thead>
+                                    <tr class="border-b bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                        <th class="border-b-2 border-gray-200 bg-gray-100 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Usuario
+                                        </th>
+                                        <th class="border-b-2 border-gray-200 bg-gray-100 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Roles
+                                        </th>
+                                        <th class="border-b-2 border-gray-200 bg-gray-100 px-2 py-2 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                                            Accion
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="text-gray-700">
+                                        <td class="border-b border-gray-200 bg-white px-2 py-2 text-sm">
+                                            <p class="text-gray-900 whitespace-no-wrap">{{ selectedUser.usr_usuario }}</p>
+                                        </td>
+                                        <td class="border-b border-gray-200 bg-white px-2 py-2 text-sm">
+                                            <select v-model="selectedRole" id="roles" class="border rounded p-1">
+                                                <option v-for="role in roles" :key="role.id" :value="role.name">
+                                                    {{ role.name }}
+                                                </option>
+                                            </select>
+                                        </td>
+                                        <td class="border-b border-gray-200 bg-white px-2 py-2 text-sm">
+                                            <GreenButton @click="assignRole">
+                                                Asignar Rol
+                                            </GreenButton>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+
         </Modal>
-
     </AuthenticatedLayout>
 </template>
 

@@ -15,7 +15,9 @@ class TrackingController extends Controller
 {
     public function index()//uso
     {
-        $comprobanteSalidas = ComprobanteSalida::all();
+        $comprobanteSalidas = ComprobanteSalida::orderBy('fecha_salida', 'desc') // Primer ordenamiento
+        ->orderBy('factura', 'asc')
+        ->get();
         return Inertia::render('Tracking/Index', [
             'comprobanteSalidas' => $comprobanteSalidas,
         ]);
